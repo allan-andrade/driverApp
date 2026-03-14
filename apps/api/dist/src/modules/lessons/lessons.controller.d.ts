@@ -1,0 +1,81 @@
+import { LessonsService } from './lessons.service';
+import { VerifyPinDto } from './dto/verify-pin.dto';
+export declare class LessonsController {
+    private readonly lessonsService;
+    constructor(lessonsService: LessonsService);
+    list(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.LessonStatus;
+        candidateProfileId: string;
+        instructorProfileId: string;
+        bookingId: string;
+        vehicleId: string | null;
+        pinCode: string;
+        pinVerified: boolean;
+        startedAt: Date | null;
+        finishedAt: Date | null;
+        startLat: number | null;
+        startLng: number | null;
+        endLat: number | null;
+        endLng: number | null;
+    }[]>;
+    listMine(userId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.LessonStatus;
+        candidateProfileId: string;
+        instructorProfileId: string;
+        bookingId: string;
+        vehicleId: string | null;
+        pinCode: string;
+        pinVerified: boolean;
+        startedAt: Date | null;
+        finishedAt: Date | null;
+        startLat: number | null;
+        startLng: number | null;
+        endLat: number | null;
+        endLng: number | null;
+    }[]>;
+    checkIn(id: string, dto: VerifyPinDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.LessonStatus;
+        candidateProfileId: string;
+        instructorProfileId: string;
+        bookingId: string;
+        vehicleId: string | null;
+        pinCode: string;
+        pinVerified: boolean;
+        startedAt: Date | null;
+        finishedAt: Date | null;
+        startLat: number | null;
+        startLng: number | null;
+        endLat: number | null;
+        endLng: number | null;
+    }>;
+    finish(id: string, body: {
+        endLat?: number;
+        endLng?: number;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.LessonStatus;
+        candidateProfileId: string;
+        instructorProfileId: string;
+        bookingId: string;
+        vehicleId: string | null;
+        pinCode: string;
+        pinVerified: boolean;
+        startedAt: Date | null;
+        finishedAt: Date | null;
+        startLat: number | null;
+        startLng: number | null;
+        endLat: number | null;
+        endLng: number | null;
+    }>;
+}

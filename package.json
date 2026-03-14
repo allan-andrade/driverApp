@@ -1,0 +1,22 @@
+{
+  "name": "driver-school-platform",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @driver-school/web",
+    "dev:api": "npm run start:dev -w @driver-school/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write .",
+    "prisma:generate": "npm run prisma:generate -w @driver-school/api",
+    "prisma:migrate": "npm run prisma:migrate -w @driver-school/api",
+    "prisma:seed": "npm run prisma:seed -w @driver-school/api"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}

@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  CANDIDATE
+  INSTRUCTOR
+  SCHOOL_MANAGER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum InstructorType {
+  AUTONOMO
+  SCHOOL_LINKED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LinkStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+}
+
+enum CnhCategory {
+  A
+  B
+  AB
+  C
+  D
+  E
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  RESCHEDULED
+  COMPLETED
+}
+
+enum LessonStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum LearningStage {
+  BEGINNER
+  INTERMEDIATE
+  PRE_EXAM
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum EntityType {
+  USER
+  CANDIDATE_PROFILE
+  INSTRUCTOR_PROFILE
+  SCHOOL
+  VEHICLE
+  BOOKING
+  LESSON
+  STATE_POLICY
+  DOCUMENT_REQUIREMENT
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  phone              String?
+  passwordHash       String
+  role               UserRole
+  status             UserStatus          @default(ACTIVE)
+  refreshTokenHash   String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  candidateProfile   CandidateProfile?
+  instructorProfile  InstructorProfile?
+  schoolManager      School?
+  auditLogs          AuditLog[]
+}
+
+model CandidateProfile {
+  id                        String         @id @default(cuid())
+  userId                    String         @unique
+  fullName                  String
+  cpf                       String         @unique
+  birthDate                 DateTime
+  state                     String
+  city                      String
+  targetCategory            CnhCategory
+  learningStage             LearningStage
+  hasVehicle                Boolean        @default(false)
+  preferredLanguage         String?
+  preferredInstructorGender String?
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  user                      User           @relation(fields: [userId], references: [id])
+  bookings                  Booking[]
+  lessons                   Lesson[]
+  reviews                   Review[]
+}
+
+model InstructorProfile {
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  instructorType     InstructorType
+  verificationStatus VerificationStatus  @default(PENDING)
+  bio                String
+  yearsExperience    Int                 @default(0)
+  serviceRadiusKm    Int                 @default(10)
+  basePrice          Decimal             @db.Decimal(10, 2)
+  isActive           Boolean             @default(true)
+  categories         CnhCategory[]
+  city               String
+  state              String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id])
+  schoolLinks        InstructorSchoolLink[]
+  vehicles           Vehicle[]
+  availabilitySlots  AvailabilitySlot[]
+  packages           Package[]
+  bookings           Booking[]
+  lessons            Lesson[]
+  reviews            Review[]
+}
+
+model School {
+  id                 String              @id @default(cuid())
+  legalName          String
+  tradeName          String
+  cnpj               String              @unique
+  verificationStatus VerificationStatus  @default(PENDING)
+  address            String
+  city               String
+  state              String
+  managerUserId      String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  manager            User?               @relation(fields: [managerUserId], references: [id])
+  instructorLinks    InstructorSchoolLink[]
+  vehicles           Vehicle[]
+  packages           Package[]
+  bookings           Booking[]
+}
+
+model InstructorSchoolLink {
+  id                  String      @id @default(cuid())
+  instructorProfileId String
+  schoolId            String
+  status              LinkStatus  @default(PENDING)
+  createdAt           DateTime    @default(now())
+  instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
+  school              School      @relation(fields: [schoolId], references: [id])
+
+  @@unique([instructorProfileId, schoolId])
+}
+
+model Vehicle {
+  id                 String              @id @default(cuid())
+  instructorProfileId String?
+  schoolId           String?
+  plate              String              @unique
+  brand              String
+  model              String
+  year               Int
+  transmissionType   TransmissionType
+  categorySupported  CnhCategory
+  verificationStatus VerificationStatus  @default(PENDING)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  instructorProfile  InstructorProfile?  @relation(fields: [instructorProfileId], references: [id])
+  school             School?             @relation(fields: [schoolId], references: [id])
+  lessons            Lesson[]
+}
+
+model AvailabilitySlot {
+  id                  String            @id @default(cuid())
+  instructorProfileId String
+  weekday             Int
+  startTime           String
+  endTime             String
+  isActive            Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
+}
+
+model Package {
+  id                   String            @id @default(cuid())
+  instructorProfileId  String?
+  schoolId             String?
+  title                String
+  lessonCount          Int
+  durationMinutes      Int
+  category             CnhCategory
+  price                Decimal           @db.Decimal(10, 2)
+  usesInstructorVehicle Boolean          @default(true)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  instructorProfile    InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  school               School?           @relation(fields: [schoolId], references: [id])
+  bookings             Booking[]
+}
+
+model Booking {
+  id                  String            @id @default(cuid())
+  candidateProfileId  String
+  instructorProfileId String?
+  schoolId            String?
+  packageId           String?
+  scheduledStart      DateTime
+  scheduledEnd        DateTime
+  priceTotal          Decimal           @db.Decimal(10, 2)
+  platformFee         Decimal           @db.Decimal(10, 2)
+  status              BookingStatus     @default(PENDING)
+  paymentStatus       PaymentStatus     @default(PENDING)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  candidateProfile    CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
+  instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  school              School?           @relation(fields: [schoolId], references: [id])
+  package             Package?          @relation(fields: [packageId], references: [id])
+  lessons             Lesson[]
+  reviews             Review[]
+  payments            Payment[]
+}
+
+model Lesson {
+  id                  String            @id @default(cuid())
+  bookingId           String
+  candidateProfileId  String
+  instructorProfileId String
+  vehicleId           String?
+  pinCode             String
+  pinVerified         Boolean           @default(false)
+  startedAt           DateTime?
+  finishedAt          DateTime?
+  status              LessonStatus      @default(SCHEDULED)
+  startLat            Float?
+  startLng            Float?
+  endLat              Float?
+  endLng              Float?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  booking             Booking           @relation(fields: [bookingId], references: [id])
+  candidateProfile    CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
+  instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
+  vehicle             Vehicle?          @relation(fields: [vehicleId], references: [id])
+}
+
+model Review {
+  id                  String            @id @default(cuid())
+  bookingId           String
+  candidateProfileId  String
+  instructorProfileId String
+  punctuality         Int
+  didactics           Int
+  professionalism     Int
+  safety              Int
+  examReadiness       Int
+  comment             String?
+  createdAt           DateTime          @default(now())
+  booking             Booking           @relation(fields: [bookingId], references: [id])
+  candidateProfile    CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
+  instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
+}
+
+model StatePolicy {
+  id          String   @id @default(cuid())
+  stateCode   String
+  isActive    Boolean  @default(true)
+  rulesJson   Json
+  examFlowJson Json
+  docsJson    Json
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([stateCode])
+}
+
+model DocumentRequirement {
+  id           String   @id @default(cuid())
+  entityType   EntityType
+  stateCode    String
+  name         String
+  required     Boolean  @default(true)
+  metadataJson Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  entityType  EntityType
+  entityId    String
+  action      String
+  metadataJson Json
+  createdAt   DateTime @default(now())
+  actorUser   User?    @relation(fields: [actorUserId], references: [id])
+}
+
+model Payment {
+  id                 String        @id @default(cuid())
+  bookingId          String
+  status             PaymentStatus @default(PENDING)
+  amount             Decimal       @db.Decimal(10, 2)
+  provider           String?
+  providerPaymentId  String?
+  splitMetadataJson  Json?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  booking            Booking       @relation(fields: [bookingId], references: [id])
+}

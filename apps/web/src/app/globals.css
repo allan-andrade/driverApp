@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f8fafc;
+  --fg: #111827;
+  --card: #ffffff;
+  --accent: #0f766e;
+  --accent-soft: #ccfbf1;
+  --warm: #f97316;
+}
+
+body {
+  background: radial-gradient(circle at 0% 0%, #dbeafe 0, transparent 45%),
+    radial-gradient(circle at 100% 0%, #ffedd5 0, transparent 35%), var(--bg);
+  color: var(--fg);
+}
+
+.shell {
+  @apply mx-auto w-full max-w-7xl px-4 md:px-8;
+}
+
+.panel {
+  @apply rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur;
+}
