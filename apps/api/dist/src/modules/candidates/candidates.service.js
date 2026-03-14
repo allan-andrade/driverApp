@@ -18,10 +18,22 @@ let CandidatesService = class CandidatesService {
         this.prisma = prisma;
     }
     upsertByUser(userId, dto) {
+        const payload = {
+            fullName: dto.fullName,
+            cpf: dto.cpf,
+            birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+            state: dto.state,
+            city: dto.city,
+            targetCategory: dto.targetCategory,
+            learningStage: dto.learningStage,
+            hasVehicle: dto.hasVehicle ?? false,
+            preferredLanguage: dto.preferredLanguage,
+            preferredInstructorGender: dto.preferredInstructorGender,
+        };
         return this.prisma.candidateProfile.upsert({
             where: { userId },
-            create: { ...dto, birthDate: new Date(dto.birthDate), userId },
-            update: { ...dto, birthDate: new Date(dto.birthDate) },
+            create: { ...payload, userId },
+            update: payload,
         });
     }
     findMe(userId) {

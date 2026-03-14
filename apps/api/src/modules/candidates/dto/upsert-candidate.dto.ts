@@ -5,26 +5,33 @@ export class UpsertCandidateDto {
   @IsString()
   fullName!: string;
 
+  @IsOptional()
   @IsString()
-  cpf!: string;
+  cpf?: string;
 
+  @IsOptional()
   @IsDateString()
-  birthDate!: string;
+  birthDate?: string;
 
+  @IsOptional()
   @IsString()
-  state!: string;
+  state?: string;
 
+  @IsOptional()
   @IsString()
-  city!: string;
+  city?: string;
 
+  @IsOptional()
   @IsEnum(CnhCategory)
-  targetCategory!: CnhCategory;
+  targetCategory?: CnhCategory;
 
+  @IsOptional()
   @IsEnum(LearningStage)
-  learningStage!: LearningStage;
+  learningStage?: LearningStage;
 
+  @IsOptional()
   @IsBoolean()
-  hasVehicle!: boolean;
+  hasVehicle?: boolean;
 
   @IsOptional()
   @IsString()

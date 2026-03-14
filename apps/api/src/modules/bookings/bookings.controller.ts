@@ -20,7 +20,7 @@ export class BookingsController {
       return this.bookingsService.createForCandidate(user.userId, dto);
     }
 
-    return this.bookingsService.create(dto);
+    return this.bookingsService.create(dto, user.userId);
   }
 
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER, UserRole.ADMIN)
@@ -47,13 +47,17 @@ export class BookingsController {
 
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER)
   @Patch(':id/cancel')
-  cancel(@Param('id') id: string) {
-    return this.bookingsService.cancel(id);
+  cancel(@Param('id') id: string, @CurrentUser('userId') actorUserId: string) {
+    return this.bookingsService.cancel(id, actorUserId);
   }
 
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER)
   @Patch(':id/reschedule')
-  reschedule(@Param('id') id: string, @Body() dto: RescheduleBookingDto) {
-    return this.bookingsService.reschedule(id, dto);
+  reschedule(
+    @Param('id') id: string,
+    @Body() dto: RescheduleBookingDto,
+    @CurrentUser('userId') actorUserId: string,
+  ) {
+    return this.bookingsService.reschedule(id, dto, actorUserId);
   }
 }

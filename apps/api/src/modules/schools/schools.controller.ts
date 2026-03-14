@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -11,13 +11,13 @@ export class SchoolsController {
   constructor(private readonly schoolsService: SchoolsService) {}
 
   @Roles(UserRole.SCHOOL_MANAGER)
-  @Post('me')
+  @Patch('my-school')
   upsert(@CurrentUser('userId') userId: string, @Body() dto: UpsertSchoolDto) {
     return this.schoolsService.upsertByManager(userId, dto);
   }
 
   @Roles(UserRole.SCHOOL_MANAGER)
-  @Get('me')
+  @Get('my-school')
   mySchool(@CurrentUser('userId') userId: string) {
     return this.schoolsService.findMySchool(userId);
   }

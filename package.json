@@ -7,11 +7,15 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm run dev:api",
     "dev:web": "npm run dev -w @driver-school/web",
     "dev:api": "npm run start:dev -w @driver-school/api",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write .",
+    "db:generate": "npm run prisma:generate",
+    "db:migrate": "npm run prisma:migrate",
+    "db:seed": "npm run prisma:seed",
     "prisma:generate": "npm run prisma:generate -w @driver-school/api",
     "prisma:migrate": "npm run prisma:migrate -w @driver-school/api",
     "prisma:seed": "npm run prisma:seed -w @driver-school/api"

@@ -29,7 +29,7 @@ let BookingsController = class BookingsController {
         if (user.role === client_1.UserRole.CANDIDATE) {
             return this.bookingsService.createForCandidate(user.userId, dto);
         }
-        return this.bookingsService.create(dto);
+        return this.bookingsService.create(dto, user.userId);
     }
     listMine(user) {
         return this.bookingsService.listMine(user.userId, user.role);
@@ -40,11 +40,11 @@ let BookingsController = class BookingsController {
     findOne(id) {
         return this.bookingsService.findOne(id);
     }
-    cancel(id) {
-        return this.bookingsService.cancel(id);
+    cancel(id, actorUserId) {
+        return this.bookingsService.cancel(id, actorUserId);
     }
-    reschedule(id, dto) {
-        return this.bookingsService.reschedule(id, dto);
+    reschedule(id, dto, actorUserId) {
+        return this.bookingsService.reschedule(id, dto, actorUserId);
     }
 };
 exports.BookingsController = BookingsController;
@@ -87,8 +87,9 @@ __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.CANDIDATE, client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER),
     (0, common_1.Patch)(':id/cancel'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "cancel", null);
 __decorate([
@@ -96,8 +97,9 @@ __decorate([
     (0, common_1.Patch)(':id/reschedule'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, reschedule_booking_dto_1.RescheduleBookingDto]),
+    __metadata("design:paramtypes", [String, reschedule_booking_dto_1.RescheduleBookingDto, String]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "reschedule", null);
 exports.BookingsController = BookingsController = __decorate([

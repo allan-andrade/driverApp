@@ -40,6 +40,9 @@ let ComplianceService = class ComplianceService {
     listPolicies() {
         return this.prisma.statePolicy.findMany({ orderBy: { stateCode: 'asc' } });
     }
+    findPolicyByStateCode(stateCode) {
+        return this.prisma.statePolicy.findUnique({ where: { stateCode } });
+    }
     createDocumentRequirement(dto) {
         return this.prisma.documentRequirement.create({
             data: {

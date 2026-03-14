@@ -26,6 +26,37 @@ let AvailabilityService = class AvailabilityService {
             orderBy: [{ weekday: 'asc' }, { startTime: 'asc' }],
         });
     }
+    async getInstructorProfileIdByUserId(userId) {
+        const profile = await this.prisma.instructorProfile.findUnique({ where: { userId } });
+        if (!profile) {
+            throw new common_1.NotFoundException('Instructor profile not found for this user.');
+        }
+        return profile.id;
+    }
+    async createMine(userId, dto) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        return this.prisma.availabilitySlot.create({ data: { ...dto, instructorProfileId } });
+    }
+    async listMine(userId) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        return this.listByInstructor(instructorProfileId);
+    }
+    async updateMine(userId, id, dto) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        const slot = await this.prisma.availabilitySlot.findFirst({ where: { id, instructorProfileId } });
+        if (!slot) {
+            throw new common_1.NotFoundException('Availability slot not found for this instructor.');
+        }
+        return this.prisma.availabilitySlot.update({ where: { id }, data: dto });
+    }
+    async removeMine(userId, id) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        const slot = await this.prisma.availabilitySlot.findFirst({ where: { id, instructorProfileId } });
+        if (!slot) {
+            throw new common_1.NotFoundException('Availability slot not found for this instructor.');
+        }
+        return this.prisma.availabilitySlot.delete({ where: { id } });
+    }
 };
 exports.AvailabilityService = AvailabilityService;
 exports.AvailabilityService = AvailabilityService = __decorate([

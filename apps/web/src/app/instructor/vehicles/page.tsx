@@ -1,5 +1,5 @@
 import { DashboardShell } from '@/components/dashboard-shell';
-import { QueryPanel } from '@/components/query-panel';
+import { InstructorVehiclesManager } from '@/components/instructor-vehicles-manager';
 
 const nav = [
   { href: '/instructor/dashboard', label: 'Dashboard' },
@@ -12,7 +12,7 @@ const nav = [
 export default function InstructorVehiclesPage() {
   return (
     <DashboardShell title="Meus Veiculos" nav={nav}>
-      <QueryPanel title="Veiculos cadastrados" path="/vehicles" />
+      <InstructorVehiclesManager />
     </DashboardShell>
   );
 }

@@ -5,12 +5,12 @@ export declare class LessonsController {
     constructor(lessonsService: LessonsService);
     list(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;
@@ -23,12 +23,12 @@ export declare class LessonsController {
     }[]>;
     listMine(userId: string): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;
@@ -41,12 +41,12 @@ export declare class LessonsController {
     }[]>;
     checkIn(id: string, dto: VerifyPinDto): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;
@@ -62,12 +62,12 @@ export declare class LessonsController {
         endLng?: number;
     }): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;

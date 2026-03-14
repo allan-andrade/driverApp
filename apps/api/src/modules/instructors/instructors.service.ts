@@ -9,10 +9,23 @@ export class InstructorsService {
   constructor(private readonly prisma: PrismaService) {}
 
   upsertByUser(userId: string, dto: UpsertInstructorDto) {
+    const payload = {
+      instructorType: dto.instructorType,
+      verificationStatus: dto.verificationStatus ?? 'PENDING',
+      bio: dto.bio,
+      yearsExperience: dto.yearsExperience,
+      serviceRadiusKm: dto.serviceRadiusKm,
+      basePrice: dto.basePrice,
+      isActive: dto.isActive ?? true,
+      categories: dto.categories ?? [],
+      city: dto.city,
+      state: dto.state,
+    };
+
     return this.prisma.instructorProfile.upsert({
       where: { userId },
-      create: { ...dto, verificationStatus: dto.verificationStatus ?? 'PENDING', userId },
-      update: dto,
+      create: { ...payload, userId },
+      update: payload,
     });
   }
 

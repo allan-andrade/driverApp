@@ -1,5 +1,5 @@
 import { DashboardShell } from '@/components/dashboard-shell';
-import { QueryPanel } from '@/components/query-panel';
+import { CandidateDashboardSummary } from '@/components/candidate-dashboard-summary';
 
 const nav = [
   { href: '/candidate/dashboard', label: 'Dashboard' },
@@ -12,7 +12,7 @@ const nav = [
 export default function CandidateDashboardPage() {
   return (
     <DashboardShell title="Area do Candidato" nav={nav}>
-      <QueryPanel title="Proximas aulas e historico" path="/dashboard/candidate" />
+      <CandidateDashboardSummary />
     </DashboardShell>
   );
 }

@@ -6,9 +6,9 @@ export declare class ReviewsController {
     create(dto: CreateReviewDto): import(".prisma/client").Prisma.Prisma__ReviewClient<{
         id: string;
         createdAt: Date;
+        instructorProfileId: string;
         bookingId: string;
         candidateProfileId: string;
-        instructorProfileId: string;
         punctuality: number;
         didactics: number;
         professionalism: number;
@@ -19,9 +19,9 @@ export declare class ReviewsController {
     list(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
+        instructorProfileId: string;
         bookingId: string;
         candidateProfileId: string;
-        instructorProfileId: string;
         punctuality: number;
         didactics: number;
         professionalism: number;

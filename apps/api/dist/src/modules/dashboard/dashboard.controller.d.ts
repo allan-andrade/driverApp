@@ -8,30 +8,30 @@ export declare class DashboardController {
             status: import(".prisma/client").$Enums.BookingStatus;
             createdAt: Date;
             updatedAt: Date;
-            candidateProfileId: string;
             instructorProfileId: string | null;
             schoolId: string | null;
-            packageId: string | null;
+            candidateProfileId: string;
             scheduledStart: Date;
             scheduledEnd: Date;
             priceTotal: import("@prisma/client/runtime/library").Decimal;
             platformFee: import("@prisma/client/runtime/library").Decimal;
             paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+            packageId: string | null;
         }[];
         history: {
             id: string;
             status: import(".prisma/client").$Enums.BookingStatus;
             createdAt: Date;
             updatedAt: Date;
-            candidateProfileId: string;
             instructorProfileId: string | null;
             schoolId: string | null;
-            packageId: string | null;
+            candidateProfileId: string;
             scheduledStart: Date;
             scheduledEnd: Date;
             priceTotal: import("@prisma/client/runtime/library").Decimal;
             platformFee: import("@prisma/client/runtime/library").Decimal;
             paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+            packageId: string | null;
         }[];
     }>;
     instructor(userId: string): Promise<{
@@ -50,15 +50,15 @@ export declare class DashboardController {
             status: import(".prisma/client").$Enums.BookingStatus;
             createdAt: Date;
             updatedAt: Date;
-            candidateProfileId: string;
             instructorProfileId: string | null;
             schoolId: string | null;
-            packageId: string | null;
+            candidateProfileId: string;
             scheduledStart: Date;
             scheduledEnd: Date;
             priceTotal: import("@prisma/client/runtime/library").Decimal;
             platformFee: import("@prisma/client/runtime/library").Decimal;
             paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+            packageId: string | null;
         }[];
     }>;
     school(userId: string): Promise<{
@@ -66,13 +66,13 @@ export declare class DashboardController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            state: string;
-            city: string;
+            state: string | null;
+            city: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
             legalName: string;
             tradeName: string;
             cnpj: string;
-            address: string;
+            address: string | null;
             managerUserId: string | null;
         };
         instructors: {
@@ -87,15 +87,15 @@ export declare class DashboardController {
             status: import(".prisma/client").$Enums.BookingStatus;
             createdAt: Date;
             updatedAt: Date;
-            candidateProfileId: string;
             instructorProfileId: string | null;
             schoolId: string | null;
-            packageId: string | null;
+            candidateProfileId: string;
             scheduledStart: Date;
             scheduledEnd: Date;
             priceTotal: import("@prisma/client/runtime/library").Decimal;
             platformFee: import("@prisma/client/runtime/library").Decimal;
             paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+            packageId: string | null;
         }[];
     }>;
     admin(): Promise<{

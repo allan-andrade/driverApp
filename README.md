@@ -1,199 +1,204 @@
-# DriveSchool Market MVP - Monorepo
+# DriveSchool Platform - FASE 1
 
-Plataforma marketplace para formacao de condutores no Brasil, conectando candidatos a CNH, instrutores autonomos e autoescolas.
+Fundacao funcional do produto com monorepo, auth completa, RBAC, banco, seed e frontend base por papel.
 
 ## Stack
 
-- Frontend: Next.js (App Router), TypeScript, Tailwind CSS, React Hook Form, Zod, TanStack Query, base shadcn/ui
+- Frontend: Next.js App Router, TypeScript, Tailwind CSS, React Hook Form, Zod, TanStack Query, base shadcn/ui
 - Backend: NestJS, TypeScript, Prisma, PostgreSQL, Redis, BullMQ
-- Auth: JWT access + refresh token, RBAC por papel
-- Infra local: Docker Compose para PostgreSQL e Redis
+- Auth: JWT access token + JWT refresh token
+- Infra local: Docker Compose
+- Qualidade: ESLint, Prettier, env examples
 
-## Estrutura do Projeto
+## Estrutura do monorepo
 
 ```txt
 apps/
-	api/            # NestJS modular monolith + Prisma
-	web/            # Next.js App Router
+  api/
+  web/
 packages/
-	config/         # shared config placeholder
-	types/          # tipos compartilhados
-	ui/             # componentes compartilhados base
+  config/
+  types/
+  ui/
 infrastructure/
-	docker-compose.yml
+  docker-compose.yml
 ```
 
-## Modulos Backend Implementados
+## Scripts principais
 
-- auth: register, login, refresh, logout, session
-- users: listagem admin
-- candidates: perfil candidato
-- instructors: perfil instrutor + busca publica com filtros + ranking simples
-- schools: perfil autoescola + vinculo de instrutores
-- vehicles: cadastro/listagem
-- availability: slots de agenda
-- packages: pacote de aulas
-- bookings: reserva, cancelamento, remarcacao, detalhe
-- lessons: check-in por PIN, iniciar/finalizar aula
-- reviews: avaliacao estruturada por criterio
-- compliance: state policies + document requirements
-- audit: trilha de auditoria
-- dashboard: candidato, instrutor, escola, admin
-- payments: base/stub para integracao futura com split
-- queue: base BullMQ com worker stub
+- instalar dependencias: `npm install`
+- backend dev: `npm run dev:api`
+- frontend dev: `npm run dev:web`
+- build: `npm run build`
+- lint: `npm run lint`
+- db generate: `npm run db:generate`
+- db migrate: `npm run db:migrate`
+- db seed: `npm run db:seed`
 
-## Modelagem Prisma
+## Configuracao de ambiente
 
-Schema criado em `apps/api/prisma/schema.prisma` com entidades:
+### API
 
-- User
-- CandidateProfile
-- InstructorProfile
-- School
-- InstructorSchoolLink
-- Vehicle
-- AvailabilitySlot
-- Package
-- Booking
-- Lesson
-- Review
-- StatePolicy
-- DocumentRequirement
-- AuditLog
-- Payment
+Copie `apps/api/.env.example` para `apps/api/.env`.
 
-Com enums para roles, status, tipo de instrutor, transmissao, categorias CNH, status de reserva/aula/pagamento, etc.
+### WEB
 
-## Seed Inicial
+Copie `apps/web/.env.example` para `apps/web/.env.local`.
 
-Seed implementado em `apps/api/prisma/seed.ts` com:
-
-- 1 admin
-- 3 instrutores
-- 1 autoescola + 1 gestor
-- 3 candidatos
-- veiculos
-- slots de disponibilidade
-- reservas + aulas
-- avaliacao
-- state policies (SP, RJ)
-- document requirements
-- audit log inicial
-
-Credencial de seed para todos os usuarios:
-
-- senha: `12345678`
-
-## Frontend Implementado
-
-### Publico
-
-- landing page
-- listagem de instrutores
-- detalhe do instrutor
-
-### Auth
-
-- login
-- cadastro com selecao de papel
-
-### Candidato
-
-- dashboard
-- perfil
-- reservas
-- detalhe de reserva
-- busca
-
-### Instrutor
-
-- dashboard
-- perfil
-- veiculos
-- agenda
-- reservas
-
-### Autoescola
-
-- dashboard
-- perfil
-- instrutores vinculados
-- reservas
-
-### Admin
-
-- dashboard
-- usuarios
-- instrutores
-- autoescolas
-- state policies
-
-## Execucao Local
-
-### 1) Dependencias
-
-```bash
-npm install
-```
-
-### 2) Infra local (opcional se ja tiver Postgres/Redis locais)
+## Subir infraestrutura local
 
 ```bash
 cd infrastructure
 docker compose up -d
 ```
 
-### 3) Variaveis de ambiente
+## Rodar localmente
 
-```bash
-copy apps\api\.env.example apps\api\.env
-copy apps\web\.env.example apps\web\.env.local
-```
-
-### 4) Prisma
-
-```bash
-npm run prisma:generate
-npm run prisma:migrate
-```
-
-### 5) Rodar API e Web
-
-Em terminais separados:
+Em dois terminais:
 
 ```bash
 npm run dev:api
 npm run dev:web
 ```
 
-API: `http://localhost:4000/api`
-Web: `http://localhost:3000`
+- API: http://localhost:4000/api
+- WEB: http://localhost:3000
 
-## Validacoes Executadas Nesta Entrega
+## Prisma FASE 1
 
-- Prisma generate: OK
-- Prisma migrate dev + seed: OK
-- Lint workspaces: OK
-- Build (api + web): OK
+Schema principal: `apps/api/prisma/schema.prisma`
 
-## O que ja esta funcional
+Entidades base da fase 1:
 
-- Fundacao monorepo pronta para evolucao
-- Arquitetura modular monolito no backend
-- RBAC com guard global + decorator de roles
-- Fluxos principais de marketplace (descoberta, reservas, aula, avaliacao)
-- Dashboards por papel
-- Fundacao compliance, auditoria, fila e pagamentos
+- User
+- CandidateProfile
+- InstructorProfile
+- School
+- AuditLog
+- StatePolicy
 
-## Backlog Recomendado - Proxima Fase
+Enums base da fase 1:
 
-1. Middleware de autenticacao no frontend para proteger rotas por papel.
-2. Formularios completos de CRUD (nao apenas paines de leitura JSON).
-3. Pagamentos reais (Stripe/Pagar.me/Asaas) com split e webhooks.
-4. Matching score avancado (distancia, no-show risk, conversao, SLA).
-5. Calendario visual com disponibilidade real e bloqueio transacional de slots.
-6. Trilhas de auditoria automatica por evento de dominio.
-7. Upload/verificacao documental com storage e workflow de aprovacao.
-8. Cobertura de testes (unitarios, integracao e e2e).
-9. Observabilidade (logs estruturados, tracing e metricas).
-10. Regras regulatorias por estado com engine configuravel.
+- UserRole
+- UserStatus
+- VerificationStatus
+- InstructorType
+- BookingStatus
+- LessonStatus
+- TransmissionType
+- CnhCategory
+
+## Endpoints implementados na FASE 1
+
+### Auth
+
+- POST /auth/register
+- POST /auth/login
+- POST /auth/refresh
+- POST /auth/logout
+- GET /auth/me
+
+### Users
+
+- GET /users/me
+- GET /users/:id
+
+### Candidates
+
+- GET /candidates/me
+- PATCH /candidates/me
+
+### Instructors
+
+- GET /instructors/me
+- PATCH /instructors/me
+
+### Marketplace (FASE 2 - backend)
+
+- GET /marketplace/instructors
+- GET /marketplace/instructors/:id
+- GET /marketplace/instructors/:id/availability
+- GET /marketplace/instructors/:id/reviews
+- GET /marketplace/instructors/:id/packages
+
+### Instructors me (FASE 2 - backend)
+
+- POST /instructors/me/vehicles
+- GET /instructors/me/vehicles
+- PATCH /instructors/me/vehicles/:id
+- DELETE /instructors/me/vehicles/:id
+- POST /instructors/me/availability
+- GET /instructors/me/availability
+- PATCH /instructors/me/availability/:id
+- DELETE /instructors/me/availability/:id
+- POST /instructors/me/packages
+- GET /instructors/me/packages
+- PATCH /instructors/me/packages/:id
+- DELETE /instructors/me/packages/:id
+- GET /instructors/me/bookings
+
+### Schools
+
+- GET /schools/my-school
+- PATCH /schools/my-school
+
+### Compliance
+
+- GET /state-policies
+- GET /state-policies/:stateCode
+
+### Admin
+
+- GET /admin/users
+- GET /admin/instructors
+- GET /admin/schools
+
+## Seed inicial
+
+Arquivo: `apps/api/prisma/seed.ts`
+
+Usuarios criados:
+
+- admin@driverschool.local
+- candidate@driverschool.local
+- instructor@driverschool.local
+- manager@driverschool.local
+
+Senha para todos no seed:
+
+- Admin@123456
+
+Dados adicionais no seed:
+
+- 1 autoescola vinculada ao school manager
+- state policies para SP e RJ
+
+## Frontend entregue na FASE 1
+
+Publico:
+
+- landing
+- login
+- cadastro
+
+Autenticado (por papel):
+
+- dashboard base candidate
+- dashboard base instructor
+- dashboard base school manager
+- dashboard base admin
+- perfil candidate
+- perfil instructor
+
+Com:
+
+- layout base com navegacao lateral
+- protecao de rotas por papel
+- persistencia de sessao com token no cliente
+- redirecionamento por papel apos login
+
+## Status de validacao
+
+- lint: OK
+- build: OK
+- migrate + seed: pronto para execucao com scripts

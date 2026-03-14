@@ -14,14 +14,8 @@ export function RoleGuard({ allowedRoles, children }: { allowedRoles: Role[]; ch
     let mounted = true;
 
     const validate = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        router.replace('/login');
-        return;
-      }
-
       try {
-        const session = await clientApiRequest<{ role: Role }>('/auth/session');
+        const session = await clientApiRequest<{ role: Role }>('/auth/me');
         if (!allowedRoles.includes(session.role)) {
           router.replace('/login');
           return;

@@ -15,12 +15,15 @@ export class UpsertSchoolDto {
   @IsEnum(VerificationStatus)
   verificationStatus?: VerificationStatus;
 
+  @IsOptional()
   @IsString()
-  address!: string;
+  address?: string;
 
+  @IsOptional()
   @IsString()
-  city!: string;
+  city?: string;
 
+  @IsOptional()
   @IsString()
-  state!: string;
+  state?: string;
 }

@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../prisma.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -7,7 +8,8 @@ export declare class AuthService {
     private readonly usersService;
     private readonly jwtService;
     private readonly configService;
-    constructor(usersService: UsersService, jwtService: JwtService, configService: ConfigService);
+    private readonly prisma;
+    constructor(usersService: UsersService, jwtService: JwtService, configService: ConfigService, prisma: PrismaService);
     register(dto: RegisterDto): Promise<{
         user: {
             id: string;
@@ -51,4 +53,5 @@ export declare class AuthService {
         status: import(".prisma/client").$Enums.UserStatus;
     }>;
     private issueTokens;
+    private getDefaultName;
 }

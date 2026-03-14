@@ -11,7 +11,7 @@ const nav = [
 export default function SchoolProfilePage() {
   return (
     <DashboardShell title="Perfil da Autoescola" nav={nav}>
-      <QueryPanel title="Dados da escola" path="/schools/me" />
+      <QueryPanel title="Dados da escola" path="/schools/my-school" />
     </DashboardShell>
   );
 }

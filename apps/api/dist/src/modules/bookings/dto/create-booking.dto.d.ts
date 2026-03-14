@@ -5,6 +5,6 @@ export declare class CreateBookingDto {
     packageId?: string;
     scheduledStart: string;
     scheduledEnd: string;
-    priceTotal: number;
-    platformFee: number;
+    priceTotal?: number;
+    platformFee?: number;
 }

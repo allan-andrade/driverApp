@@ -12,7 +12,7 @@ const nav = [
 export default function AdminStatePoliciesPage() {
   return (
     <DashboardShell title="State Policies" nav={nav}>
-      <QueryPanel title="Politicas por estado" path="/compliance/state-policies" />
+      <QueryPanel title="Politicas por estado" path="/state-policies" />
     </DashboardShell>
   );
 }

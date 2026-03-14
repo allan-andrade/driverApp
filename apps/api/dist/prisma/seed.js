@@ -41,86 +41,198 @@ async function main() {
     await prisma.lesson.deleteMany();
     await prisma.payment.deleteMany();
     await prisma.booking.deleteMany();
+    await prisma.package.deleteMany();
     await prisma.availabilitySlot.deleteMany();
     await prisma.vehicle.deleteMany();
-    await prisma.package.deleteMany();
     await prisma.instructorSchoolLink.deleteMany();
+    await prisma.documentRequirement.deleteMany();
     await prisma.candidateProfile.deleteMany();
     await prisma.instructorProfile.deleteMany();
     await prisma.school.deleteMany();
-    await prisma.documentRequirement.deleteMany();
     await prisma.statePolicy.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.user.deleteMany();
-    const passwordHash = await bcrypt.hash('12345678', 10);
-    const admin = await prisma.user.create({
+    const passwordHash = await bcrypt.hash('Admin@123456', 10);
+    await prisma.user.create({
         data: {
-            email: 'admin@driverschool.app',
+            email: 'admin@driverschool.local',
             passwordHash,
             role: client_1.UserRole.ADMIN,
             status: client_1.UserStatus.ACTIVE,
             phone: '11900000001',
         },
     });
-    const candidatesUsers = await Promise.all(['ana', 'bruno', 'carla'].map((name, idx) => prisma.user.create({
+    const candidateUser = await prisma.user.create({
         data: {
-            email: `${name}@driverschool.app`,
+            email: 'candidate@driverschool.local',
             passwordHash,
             role: client_1.UserRole.CANDIDATE,
             status: client_1.UserStatus.ACTIVE,
-            phone: `1190000001${idx + 2}`,
+            phone: '11900000002',
         },
-    })));
-    const candidateProfiles = await Promise.all(candidatesUsers.map((user, idx) => prisma.candidateProfile.create({
+    });
+    const candidateProfile = await prisma.candidateProfile.create({
         data: {
-            userId: user.id,
-            fullName: `Candidato ${idx + 1}`,
-            cpf: `1112223334${idx}`,
-            birthDate: new Date(1998, idx + 1, 10),
+            userId: candidateUser.id,
+            fullName: 'Candidato Seed',
+            hasVehicle: false,
             state: 'SP',
-            city: idx === 0 ? 'Sao Paulo' : 'Campinas',
-            targetCategory: client_1.CnhCategory.B,
-            learningStage: idx === 2 ? client_1.LearningStage.PRE_EXAM : client_1.LearningStage.BEGINNER,
-            hasVehicle: idx % 2 === 0,
+            city: 'Sao Paulo',
             preferredLanguage: 'pt-BR',
         },
-    })));
-    const instructorUsers = await Promise.all(['igor', 'juliana', 'marcos'].map((name, idx) => prisma.user.create({
+    });
+    const instructorUser = await prisma.user.create({
         data: {
-            email: `${name}@driverschool.app`,
+            email: 'instructor@driverschool.local',
             passwordHash,
             role: client_1.UserRole.INSTRUCTOR,
             status: client_1.UserStatus.ACTIVE,
-            phone: `2190000001${idx + 5}`,
+            phone: '11900000003',
         },
-    })));
-    const instructors = await Promise.all(instructorUsers.map((user, idx) => prisma.instructorProfile.create({
+    });
+    const instructorProfile = await prisma.instructorProfile.create({
         data: {
-            userId: user.id,
-            instructorType: idx === 0 ? client_1.InstructorType.AUTONOMO : client_1.InstructorType.SCHOOL_LINKED,
-            verificationStatus: idx === 2 ? client_1.VerificationStatus.PENDING : client_1.VerificationStatus.APPROVED,
-            bio: `Instrutor com foco em seguranca e preparacao para exame pratico ${idx + 1}.`,
-            yearsExperience: 4 + idx,
-            serviceRadiusKm: 10 + idx * 5,
-            basePrice: 95 + idx * 15,
+            userId: instructorUser.id,
+            instructorType: client_1.InstructorType.AUTONOMO,
+            verificationStatus: client_1.VerificationStatus.APPROVED,
+            bio: 'Instrutor premium focado em primeira habilitacao e preparo para prova pratica.',
+            yearsExperience: 9,
+            serviceRadiusKm: 22,
+            basePrice: 140,
             isActive: true,
             categories: [client_1.CnhCategory.B],
-            city: idx === 2 ? 'Rio de Janeiro' : 'Sao Paulo',
-            state: idx === 2 ? 'RJ' : 'SP',
+            city: 'Sao Paulo',
+            state: 'SP',
         },
-    })));
-    const instructor1 = instructors[0];
-    const instructor2 = instructors[1];
-    const instructor3 = instructors[2];
-    const candidate1 = candidateProfiles[0];
-    const candidate2 = candidateProfiles[1];
+    });
+    await prisma.vehicle.create({
+        data: {
+            instructorProfileId: instructorProfile.id,
+            plate: 'ABC1D23',
+            brand: 'Toyota',
+            model: 'Yaris',
+            year: 2021,
+            transmissionType: 'AUTOMATIC',
+            categorySupported: client_1.CnhCategory.B,
+            verificationStatus: client_1.VerificationStatus.APPROVED,
+        },
+    });
+    await prisma.availabilitySlot.createMany({
+        data: [
+            {
+                instructorProfileId: instructorProfile.id,
+                weekday: 1,
+                startTime: '08:00',
+                endTime: '12:00',
+                isActive: true,
+            },
+            {
+                instructorProfileId: instructorProfile.id,
+                weekday: 3,
+                startTime: '14:00',
+                endTime: '18:00',
+                isActive: true,
+            },
+            {
+                instructorProfileId: instructorProfile.id,
+                weekday: 5,
+                startTime: '09:00',
+                endTime: '13:00',
+                isActive: true,
+            },
+        ],
+    });
+    const introPackage = await prisma.package.create({
+        data: {
+            instructorProfileId: instructorProfile.id,
+            title: 'Pacote Inicio Seguro',
+            lessonCount: 5,
+            durationMinutes: 50,
+            category: client_1.CnhCategory.B,
+            price: 590,
+            usesInstructorVehicle: true,
+        },
+    });
+    const examPackage = await prisma.package.create({
+        data: {
+            instructorProfileId: instructorProfile.id,
+            title: 'Pacote Reta Final de Exame',
+            lessonCount: 3,
+            durationMinutes: 50,
+            category: client_1.CnhCategory.B,
+            price: 390,
+            usesInstructorVehicle: true,
+        },
+    });
+    const now = new Date();
+    const upcomingStart = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    upcomingStart.setUTCHours(14, 0, 0, 0);
+    const upcomingEnd = new Date(upcomingStart.getTime() + 50 * 60 * 1000);
+    const completedStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    completedStart.setUTCHours(14, 0, 0, 0);
+    const completedEnd = new Date(completedStart.getTime() + 50 * 60 * 1000);
+    const upcomingBooking = await prisma.booking.create({
+        data: {
+            candidateProfileId: candidateProfile.id,
+            instructorProfileId: instructorProfile.id,
+            packageId: introPackage.id,
+            scheduledStart: upcomingStart,
+            scheduledEnd: upcomingEnd,
+            priceTotal: 590,
+            platformFee: 70.8,
+            status: client_1.BookingStatus.CONFIRMED,
+            paymentStatus: client_1.PaymentStatus.PENDING,
+        },
+    });
+    const completedBooking = await prisma.booking.create({
+        data: {
+            candidateProfileId: candidateProfile.id,
+            instructorProfileId: instructorProfile.id,
+            packageId: examPackage.id,
+            scheduledStart: completedStart,
+            scheduledEnd: completedEnd,
+            priceTotal: 390,
+            platformFee: 46.8,
+            status: client_1.BookingStatus.COMPLETED,
+            paymentStatus: client_1.PaymentStatus.PAID,
+        },
+    });
+    await prisma.payment.createMany({
+        data: [
+            {
+                bookingId: upcomingBooking.id,
+                status: client_1.PaymentStatus.PENDING,
+                amount: 590,
+                provider: 'stub',
+            },
+            {
+                bookingId: completedBooking.id,
+                status: client_1.PaymentStatus.PAID,
+                amount: 390,
+                provider: 'stub',
+            },
+        ],
+    });
+    await prisma.review.create({
+        data: {
+            bookingId: completedBooking.id,
+            candidateProfileId: candidateProfile.id,
+            instructorProfileId: instructorProfile.id,
+            punctuality: 5,
+            didactics: 5,
+            professionalism: 5,
+            safety: 5,
+            examReadiness: 4,
+            comment: 'Aulas claras, objetivas e com foco no exame pratico.',
+        },
+    });
     const managerUser = await prisma.user.create({
         data: {
-            email: 'gestor@escolaprime.app',
+            email: 'manager@driverschool.local',
             passwordHash,
             role: client_1.UserRole.SCHOOL_MANAGER,
             status: client_1.UserStatus.ACTIVE,
-            phone: '11900000999',
+            phone: '11900000004',
         },
     });
     const school = await prisma.school.create({
@@ -133,134 +245,6 @@ async function main() {
             city: 'Sao Paulo',
             state: 'SP',
             managerUserId: managerUser.id,
-        },
-    });
-    await prisma.instructorSchoolLink.createMany({
-        data: [
-            {
-                instructorProfileId: instructor2.id,
-                schoolId: school.id,
-                status: client_1.LinkStatus.ACTIVE,
-            },
-            {
-                instructorProfileId: instructor3.id,
-                schoolId: school.id,
-                status: client_1.LinkStatus.PENDING,
-            },
-        ],
-    });
-    await prisma.vehicle.createMany({
-        data: [
-            {
-                instructorProfileId: instructor1.id,
-                plate: 'ABC1D23',
-                brand: 'Toyota',
-                model: 'Yaris',
-                year: 2023,
-                transmissionType: 'MANUAL',
-                categorySupported: client_1.CnhCategory.B,
-                verificationStatus: client_1.VerificationStatus.APPROVED,
-            },
-            {
-                instructorProfileId: instructor2.id,
-                plate: 'EFG4H56',
-                brand: 'Honda',
-                model: 'City',
-                year: 2022,
-                transmissionType: 'AUTOMATIC',
-                categorySupported: client_1.CnhCategory.B,
-                verificationStatus: client_1.VerificationStatus.APPROVED,
-            },
-            {
-                schoolId: school.id,
-                plate: 'IJK7L89',
-                brand: 'Chevrolet',
-                model: 'Onix',
-                year: 2021,
-                transmissionType: 'MANUAL',
-                categorySupported: client_1.CnhCategory.B,
-                verificationStatus: client_1.VerificationStatus.PENDING,
-            },
-        ],
-    });
-    await prisma.availabilitySlot.createMany({
-        data: [
-            { instructorProfileId: instructor1.id, weekday: 1, startTime: '08:00', endTime: '12:00', isActive: true },
-            { instructorProfileId: instructor1.id, weekday: 3, startTime: '14:00', endTime: '18:00', isActive: true },
-            { instructorProfileId: instructor2.id, weekday: 2, startTime: '09:00', endTime: '13:00', isActive: true },
-            { instructorProfileId: instructor3.id, weekday: 4, startTime: '10:00', endTime: '16:00', isActive: true },
-        ],
-    });
-    const starterPackage = await prisma.package.create({
-        data: {
-            instructorProfileId: instructor1.id,
-            title: 'Pacote Inicio Seguro',
-            lessonCount: 5,
-            durationMinutes: 50,
-            category: client_1.CnhCategory.B,
-            price: 450,
-            usesInstructorVehicle: true,
-        },
-    });
-    const booking1 = await prisma.booking.create({
-        data: {
-            candidateProfileId: candidate1.id,
-            instructorProfileId: instructor1.id,
-            packageId: starterPackage.id,
-            scheduledStart: new Date('2026-03-20T10:00:00.000Z'),
-            scheduledEnd: new Date('2026-03-20T10:50:00.000Z'),
-            priceTotal: 90,
-            platformFee: 9,
-            status: client_1.BookingStatus.CONFIRMED,
-            paymentStatus: 'PENDING',
-        },
-    });
-    const booking2 = await prisma.booking.create({
-        data: {
-            candidateProfileId: candidate2.id,
-            schoolId: school.id,
-            instructorProfileId: instructor2.id,
-            scheduledStart: new Date('2026-03-18T14:00:00.000Z'),
-            scheduledEnd: new Date('2026-03-18T14:50:00.000Z'),
-            priceTotal: 110,
-            platformFee: 11,
-            status: client_1.BookingStatus.CONFIRMED,
-            paymentStatus: 'PAID',
-        },
-    });
-    await prisma.lesson.createMany({
-        data: [
-            {
-                bookingId: booking1.id,
-                candidateProfileId: candidate1.id,
-                instructorProfileId: instructor1.id,
-                pinCode: '1234',
-                pinVerified: false,
-                status: 'SCHEDULED',
-            },
-            {
-                bookingId: booking2.id,
-                candidateProfileId: candidate2.id,
-                instructorProfileId: instructor2.id,
-                pinCode: '9876',
-                pinVerified: true,
-                startedAt: new Date('2026-03-18T14:00:00.000Z'),
-                finishedAt: new Date('2026-03-18T14:50:00.000Z'),
-                status: 'COMPLETED',
-            },
-        ],
-    });
-    await prisma.review.create({
-        data: {
-            bookingId: booking2.id,
-            candidateProfileId: candidate2.id,
-            instructorProfileId: instructor2.id,
-            punctuality: 5,
-            didactics: 4,
-            professionalism: 5,
-            safety: 5,
-            examReadiness: 4,
-            comment: 'Aula muito clara e objetiva.',
         },
     });
     await prisma.statePolicy.createMany({
@@ -283,34 +267,16 @@ async function main() {
             },
         ],
     });
-    await prisma.documentRequirement.createMany({
-        data: [
-            {
-                entityType: 'CANDIDATE_PROFILE',
-                stateCode: 'SP',
-                name: 'Comprovante de residencia',
-                required: true,
-                metadataJson: { maxAgeDays: 90 },
-            },
-            {
-                entityType: 'INSTRUCTOR_PROFILE',
-                stateCode: 'RJ',
-                name: 'Credencial de instrutor',
-                required: true,
-                metadataJson: { issuingAuthority: 'DETRAN' },
-            },
-        ],
-    });
     await prisma.auditLog.create({
         data: {
-            actorUserId: admin.id,
+            actorUserId: null,
             entityType: 'STATE_POLICY',
             entityId: 'SP',
             action: 'SEED_CREATED',
             metadataJson: { source: 'seed' },
         },
     });
-    console.log('Seed executed with success');
+    console.log('Seed phase 2 executed with success');
 }
 main()
     .catch(async (error) => {

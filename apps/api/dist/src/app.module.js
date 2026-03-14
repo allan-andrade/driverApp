@@ -26,6 +26,8 @@ const audit_module_1 = require("./modules/audit/audit.module");
 const payments_module_1 = require("./modules/payments/payments.module");
 const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const queue_module_1 = require("./modules/queue/queue.module");
+const admin_module_1 = require("./modules/admin/admin.module");
+const marketplace_module_1 = require("./modules/marketplace/marketplace.module");
 const jwt_auth_guard_1 = require("./common/guards/jwt-auth.guard");
 const roles_guard_1 = require("./common/guards/roles.guard");
 const prisma_service_1 = require("./prisma.service");
@@ -52,6 +54,8 @@ exports.AppModule = AppModule = __decorate([
             payments_module_1.PaymentsModule,
             dashboard_module_1.DashboardModule,
             queue_module_1.QueueModule,
+            admin_module_1.AdminModule,
+            marketplace_module_1.MarketplaceModule,
         ],
         providers: [
             prisma_service_1.PrismaService,

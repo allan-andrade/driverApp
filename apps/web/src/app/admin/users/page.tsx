@@ -12,7 +12,7 @@ const nav = [
 export default function AdminUsersPage() {
   return (
     <DashboardShell title="Usuarios" nav={nav}>
-      <QueryPanel title="Lista de usuarios" path="/users" />
+      <QueryPanel title="Lista de usuarios" path="/admin/users" />
     </DashboardShell>
   );
 }

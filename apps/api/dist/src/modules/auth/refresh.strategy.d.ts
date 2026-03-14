@@ -1,0 +1,17 @@
+import { ConfigService } from '@nestjs/config';
+import { UserRole } from '@prisma/client';
+import { Strategy } from 'passport-jwt';
+declare const RefreshStrategy_base: new (...args: any[]) => Strategy;
+export declare class RefreshStrategy extends RefreshStrategy_base {
+    constructor(configService: ConfigService);
+    validate(payload: {
+        sub: string;
+        email: string;
+        role: UserRole;
+    }): {
+        userId: string;
+        email: string;
+        role: import(".prisma/client").$Enums.UserRole;
+    };
+}
+export {};

@@ -1,5 +1,7 @@
 import { PrismaService } from '../../prisma.service';
+import { CreateMyPackageDto } from './dto/create-my-package.dto';
 import { CreatePackageDto } from './dto/create-package.dto';
+import { UpdatePackageDto } from './dto/update-package.dto';
 export declare class PackagesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
@@ -7,12 +9,12 @@ export declare class PackagesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        category: import(".prisma/client").$Enums.CnhCategory;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
         lessonCount: number;
         durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
@@ -20,12 +22,12 @@ export declare class PackagesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        category: import(".prisma/client").$Enums.CnhCategory;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
         lessonCount: number;
         durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
     }[]>;
@@ -33,13 +35,79 @@ export declare class PackagesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        category: import(".prisma/client").$Enums.CnhCategory;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
         lessonCount: number;
         durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
     }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        title: string;
+        lessonCount: number;
+        durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
+        price: import("@prisma/client/runtime/library").Decimal;
+        usesInstructorVehicle: boolean;
+    }>;
+    private getInstructorProfileIdByUserId;
+    createMine(userId: string, dto: CreateMyPackageDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        title: string;
+        lessonCount: number;
+        durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
+        price: import("@prisma/client/runtime/library").Decimal;
+        usesInstructorVehicle: boolean;
+    }>;
+    listMine(userId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        title: string;
+        lessonCount: number;
+        durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
+        price: import("@prisma/client/runtime/library").Decimal;
+        usesInstructorVehicle: boolean;
+    }[]>;
+    updateMine(userId: string, id: string, dto: UpdatePackageDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        title: string;
+        lessonCount: number;
+        durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
+        price: import("@prisma/client/runtime/library").Decimal;
+        usesInstructorVehicle: boolean;
+    }>;
+    removeMine(userId: string, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        title: string;
+        lessonCount: number;
+        durationMinutes: number;
+        category: import(".prisma/client").$Enums.CnhCategory;
+        price: import("@prisma/client/runtime/library").Decimal;
+        usesInstructorVehicle: boolean;
+    }>;
 }

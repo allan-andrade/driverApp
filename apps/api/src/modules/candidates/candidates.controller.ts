@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -10,7 +10,7 @@ export class CandidatesController {
   constructor(private readonly candidatesService: CandidatesService) {}
 
   @Roles(UserRole.CANDIDATE)
-  @Post('me')
+  @Patch('me')
   upsertMe(@CurrentUser('userId') userId: string, @Body() dto: UpsertCandidateDto) {
     return this.candidatesService.upsertByUser(userId, dto);
   }

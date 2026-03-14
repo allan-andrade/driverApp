@@ -9,10 +9,17 @@ const nav = [
   { href: '/candidate/search', label: 'Buscar instrutores' },
 ];
 
-export default function CandidateNewBookingPage() {
+export default function CandidateNewBookingPage({
+  searchParams,
+}: {
+  searchParams: { instructorId?: string; packageId?: string };
+}) {
   return (
     <DashboardShell title="Criar Reserva" nav={nav}>
-      <CandidateBookingForm />
+      <CandidateBookingForm
+        initialInstructorProfileId={searchParams.instructorId}
+        initialPackageId={searchParams.packageId}
+      />
     </DashboardShell>
   );
 }

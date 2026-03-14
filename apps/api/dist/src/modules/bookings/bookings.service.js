@@ -13,33 +13,143 @@ exports.BookingsService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma.service");
+const audit_service_1 = require("../audit/audit.service");
 const payments_service_1 = require("../payments/payments.service");
+const packages_service_1 = require("../packages/packages.service");
 let BookingsService = class BookingsService {
     prisma;
+    auditService;
     paymentsService;
-    constructor(prisma, paymentsService) {
+    packagesService;
+    constructor(prisma, auditService, paymentsService, packagesService) {
         this.prisma = prisma;
+        this.auditService = auditService;
         this.paymentsService = paymentsService;
+        this.packagesService = packagesService;
     }
-    async create(dto) {
+    toMinutes(time) {
+        const [hour = 0, minute = 0] = time.split(':').map(Number);
+        return hour * 60 + minute;
+    }
+    validateWindow(start, end) {
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+            throw new common_1.BadRequestException('Invalid schedule date/time.');
+        }
+        if (end <= start) {
+            throw new common_1.BadRequestException('scheduledEnd must be greater than scheduledStart.');
+        }
+        if (start <= new Date()) {
+            throw new common_1.BadRequestException('Booking must be scheduled in the future.');
+        }
+    }
+    getWeekdayUtc(date) {
+        return date.getUTCDay();
+    }
+    getMinutesUtc(date) {
+        return date.getUTCHours() * 60 + date.getUTCMinutes();
+    }
+    async validateInstructorAvailability(instructorProfileId, start, end) {
+        const weekday = this.getWeekdayUtc(start);
+        const startMinutes = this.getMinutesUtc(start);
+        const endMinutes = this.getMinutesUtc(end);
+        const slots = await this.prisma.availabilitySlot.findMany({
+            where: {
+                instructorProfileId,
+                weekday,
+                isActive: true,
+            },
+        });
+        const isCompatible = slots.some((slot) => {
+            const slotStart = this.toMinutes(slot.startTime);
+            const slotEnd = this.toMinutes(slot.endTime);
+            return startMinutes >= slotStart && endMinutes <= slotEnd;
+        });
+        if (!isCompatible) {
+            throw new common_1.BadRequestException('Requested schedule is outside instructor availability.');
+        }
+    }
+    async validateInstructorConflict(instructorProfileId, start, end, excludeBookingId) {
+        const conflict = await this.prisma.booking.findFirst({
+            where: {
+                instructorProfileId,
+                id: excludeBookingId ? { not: excludeBookingId } : undefined,
+                status: { in: [client_1.BookingStatus.PENDING, client_1.BookingStatus.CONFIRMED, client_1.BookingStatus.RESCHEDULED] },
+                scheduledStart: { lt: end },
+                scheduledEnd: { gt: start },
+            },
+        });
+        if (conflict) {
+            throw new common_1.BadRequestException('Instructor already has a booking in this time range.');
+        }
+    }
+    async calculateAmounts(dto) {
+        if (dto.packageId) {
+            const packageItem = await this.packagesService.findOne(dto.packageId);
+            return {
+                priceTotal: Number(packageItem.price),
+                platformFee: Number((Number(packageItem.price) * 0.12).toFixed(2)),
+            };
+        }
+        const priceTotal = dto.priceTotal;
+        if (priceTotal === undefined) {
+            throw new common_1.BadRequestException('priceTotal is required when packageId is not provided.');
+        }
+        const platformFee = dto.platformFee ?? Number((priceTotal * 0.12).toFixed(2));
+        return { priceTotal, platformFee };
+    }
+    normalizeBooking(booking) {
+        return {
+            ...booking,
+            priceTotal: Number(booking.priceTotal),
+            platformFee: Number(booking.platformFee),
+        };
+    }
+    async create(dto, actorUserId) {
         if (!dto.candidateProfileId) {
             throw new common_1.UnauthorizedException('candidateProfileId is required.');
         }
+        const scheduledStart = new Date(dto.scheduledStart);
+        const scheduledEnd = new Date(dto.scheduledEnd);
+        this.validateWindow(scheduledStart, scheduledEnd);
+        if (!dto.instructorProfileId) {
+            throw new common_1.BadRequestException('instructorProfileId is required.');
+        }
+        const instructorProfile = await this.prisma.instructorProfile.findUnique({
+            where: { id: dto.instructorProfileId },
+        });
+        if (!instructorProfile || !instructorProfile.isActive) {
+            throw new common_1.BadRequestException('Instructor is not active or does not exist.');
+        }
+        await this.validateInstructorAvailability(dto.instructorProfileId, scheduledStart, scheduledEnd);
+        await this.validateInstructorConflict(dto.instructorProfileId, scheduledStart, scheduledEnd);
+        const { priceTotal, platformFee } = await this.calculateAmounts(dto);
         const data = {
             candidateProfileId: dto.candidateProfileId,
             instructorProfileId: dto.instructorProfileId,
             schoolId: dto.schoolId,
             packageId: dto.packageId,
-            scheduledStart: new Date(dto.scheduledStart),
-            scheduledEnd: new Date(dto.scheduledEnd),
-            priceTotal: dto.priceTotal,
-            platformFee: dto.platformFee,
+            scheduledStart,
+            scheduledEnd,
+            priceTotal,
+            platformFee,
             status: client_1.BookingStatus.CONFIRMED,
         };
         const booking = await this.prisma.booking.create({
             data,
         });
-        await this.paymentsService.createPending(booking.id, Number(dto.priceTotal));
+        await this.paymentsService.createPending(booking.id, Number(priceTotal));
+        await this.auditService.log({
+            actorUserId,
+            entityType: client_1.EntityType.BOOKING,
+            entityId: booking.id,
+            action: 'BOOKING_CREATED',
+            metadataJson: {
+                candidateProfileId: booking.candidateProfileId,
+                instructorProfileId: booking.instructorProfileId,
+                scheduledStart: booking.scheduledStart,
+                scheduledEnd: booking.scheduledEnd,
+            },
+        });
         if (booking.instructorProfileId) {
             await this.prisma.lesson.create({
                 data: {
@@ -51,7 +161,7 @@ let BookingsService = class BookingsService {
                 },
             });
         }
-        return booking;
+        return this.normalizeBooking(booking);
     }
     async createForCandidate(userId, dto) {
         const candidateProfile = await this.prisma.candidateProfile.findUnique({ where: { userId } });
@@ -61,10 +171,38 @@ let BookingsService = class BookingsService {
         return this.create({
             ...dto,
             candidateProfileId: candidateProfile.id,
-        });
+        }, userId);
     }
-    list(filters) {
-        return this.prisma.booking.findMany({ where: filters, orderBy: { scheduledStart: 'asc' } });
+    async list(filters) {
+        const bookings = await this.prisma.booking.findMany({
+            where: filters,
+            orderBy: { scheduledStart: 'asc' },
+            include: {
+                candidateProfile: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                    },
+                },
+                instructorProfile: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                email: true,
+                            },
+                        },
+                    },
+                },
+                package: {
+                    select: {
+                        id: true,
+                        title: true,
+                    },
+                },
+            },
+        });
+        return bookings.map((item) => this.normalizeBooking(item));
     }
     async listMine(userId, role) {
         if (role === client_1.UserRole.CANDIDATE) {
@@ -87,33 +225,102 @@ let BookingsService = class BookingsService {
         }
         return this.prisma.booking.findMany({ orderBy: { scheduledStart: 'asc' }, take: 100 });
     }
-    async cancel(id) {
+    async cancel(id, actorUserId) {
         const booking = await this.prisma.booking.findUnique({ where: { id } });
         if (!booking)
             throw new common_1.NotFoundException('Booking not found.');
-        return this.prisma.booking.update({ where: { id }, data: { status: client_1.BookingStatus.CANCELLED } });
+        if (booking.status === client_1.BookingStatus.CANCELLED) {
+            throw new common_1.BadRequestException('Booking is already cancelled.');
+        }
+        const cancelled = await this.prisma.booking.update({ where: { id }, data: { status: client_1.BookingStatus.CANCELLED } });
+        await this.auditService.log({
+            actorUserId,
+            entityType: client_1.EntityType.BOOKING,
+            entityId: id,
+            action: 'BOOKING_CANCELLED',
+            metadataJson: {
+                previousStatus: booking.status,
+            },
+        });
+        return this.normalizeBooking(cancelled);
     }
-    async reschedule(id, dto) {
+    async reschedule(id, dto, actorUserId) {
         const booking = await this.prisma.booking.findUnique({ where: { id } });
         if (!booking)
             throw new common_1.NotFoundException('Booking not found.');
-        return this.prisma.booking.update({
+        if (!booking.instructorProfileId) {
+            throw new common_1.BadRequestException('Booking has no instructor assigned.');
+        }
+        const scheduledStart = new Date(dto.scheduledStart);
+        const scheduledEnd = new Date(dto.scheduledEnd);
+        this.validateWindow(scheduledStart, scheduledEnd);
+        await this.validateInstructorAvailability(booking.instructorProfileId, scheduledStart, scheduledEnd);
+        await this.validateInstructorConflict(booking.instructorProfileId, scheduledStart, scheduledEnd, id);
+        const updated = await this.prisma.booking.update({
             where: { id },
             data: {
-                scheduledStart: new Date(dto.scheduledStart),
-                scheduledEnd: new Date(dto.scheduledEnd),
+                scheduledStart,
+                scheduledEnd,
                 status: client_1.BookingStatus.RESCHEDULED,
             },
         });
+        await this.auditService.log({
+            actorUserId,
+            entityType: client_1.EntityType.BOOKING,
+            entityId: id,
+            action: 'BOOKING_RESCHEDULED',
+            metadataJson: {
+                previousStart: booking.scheduledStart,
+                previousEnd: booking.scheduledEnd,
+                scheduledStart,
+                scheduledEnd,
+            },
+        });
+        return this.normalizeBooking(updated);
     }
-    findOne(id) {
-        return this.prisma.booking.findUnique({ where: { id }, include: { lessons: true, package: true } });
+    async listMineAsInstructor(userId) {
+        const instructor = await this.prisma.instructorProfile.findUnique({ where: { userId } });
+        if (!instructor) {
+            throw new common_1.NotFoundException('Instructor profile not found.');
+        }
+        return this.list({ instructorProfileId: instructor.id });
+    }
+    async findOne(id) {
+        const booking = await this.prisma.booking.findUnique({
+            where: { id },
+            include: {
+                lessons: true,
+                package: true,
+                candidateProfile: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                    },
+                },
+                instructorProfile: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!booking) {
+            return null;
+        }
+        return this.normalizeBooking(booking);
     }
 };
 exports.BookingsService = BookingsService;
 exports.BookingsService = BookingsService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        payments_service_1.PaymentsService])
+        audit_service_1.AuditService,
+        payments_service_1.PaymentsService,
+        packages_service_1.PackagesService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map

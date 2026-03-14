@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../../prisma.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto, RegisterRole } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -25,9 +27,33 @@ export class AuthService {
     const user = await this.usersService.create({
       email: dto.email,
       phone: dto.phone,
-      role: dto.role,
+      role: dto.role as UserRole,
       passwordHash,
     });
+
+    const fullName = this.getDefaultName(dto.email);
+
+    if (dto.role === RegisterRole.CANDIDATE) {
+      await this.prisma.candidateProfile.create({
+        data: {
+          userId: user.id,
+          fullName,
+          hasVehicle: false,
+        },
+      });
+    }
+
+    if (dto.role === RegisterRole.INSTRUCTOR) {
+      await this.prisma.instructorProfile.create({
+        data: {
+          userId: user.id,
+          instructorType: 'AUTONOMO',
+          verificationStatus: 'PENDING',
+          isActive: true,
+          categories: [],
+        },
+      });
+    }
 
     return this.issueTokens(user);
   }
@@ -115,5 +141,15 @@ export class AuthService {
         refreshToken,
       },
     };
+  }
+
+  private getDefaultName(email: string) {
+    const [namePart] = email.split('@');
+    if (!namePart) return 'Novo usuario';
+    return namePart
+      .split(/[._-]/)
+      .filter(Boolean)
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+      .join(' ');
   }
 }

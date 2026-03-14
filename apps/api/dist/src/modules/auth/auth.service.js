@@ -47,15 +47,19 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
+const prisma_service_1 = require("../../prisma.service");
 const users_service_1 = require("../users/users.service");
+const register_dto_1 = require("./dto/register.dto");
 let AuthService = class AuthService {
     usersService;
     jwtService;
     configService;
-    constructor(usersService, jwtService, configService) {
+    prisma;
+    constructor(usersService, jwtService, configService, prisma) {
         this.usersService = usersService;
         this.jwtService = jwtService;
         this.configService = configService;
+        this.prisma = prisma;
     }
     async register(dto) {
         const existing = await this.usersService.findByEmail(dto.email);
@@ -69,6 +73,27 @@ let AuthService = class AuthService {
             role: dto.role,
             passwordHash,
         });
+        const fullName = this.getDefaultName(dto.email);
+        if (dto.role === register_dto_1.RegisterRole.CANDIDATE) {
+            await this.prisma.candidateProfile.create({
+                data: {
+                    userId: user.id,
+                    fullName,
+                    hasVehicle: false,
+                },
+            });
+        }
+        if (dto.role === register_dto_1.RegisterRole.INSTRUCTOR) {
+            await this.prisma.instructorProfile.create({
+                data: {
+                    userId: user.id,
+                    instructorType: 'AUTONOMO',
+                    verificationStatus: 'PENDING',
+                    isActive: true,
+                    categories: [],
+                },
+            });
+        }
         return this.issueTokens(user);
     }
     async login(dto) {
@@ -133,12 +158,23 @@ let AuthService = class AuthService {
             },
         };
     }
+    getDefaultName(email) {
+        const [namePart] = email.split('@');
+        if (!namePart)
+            return 'Novo usuario';
+        return namePart
+            .split(/[._-]/)
+            .filter(Boolean)
+            .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+            .join(' ');
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
         jwt_1.JwtService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        prisma_service_1.PrismaService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

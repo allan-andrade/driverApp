@@ -31,6 +31,59 @@ let VehiclesService = class VehiclesService {
     listBySchool(schoolId) {
         return this.prisma.vehicle.findMany({ where: { schoolId } });
     }
+    async getInstructorProfileIdByUserId(userId) {
+        const profile = await this.prisma.instructorProfile.findUnique({ where: { userId } });
+        if (!profile) {
+            throw new common_1.NotFoundException('Instructor profile not found for this user.');
+        }
+        return profile.id;
+    }
+    async createForInstructor(userId, dto) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        return this.prisma.vehicle.create({
+            data: {
+                plate: dto.plate,
+                brand: dto.brand,
+                model: dto.model,
+                year: dto.year,
+                transmissionType: dto.transmissionType,
+                categorySupported: dto.categorySupported,
+                verificationStatus: dto.verificationStatus ?? 'PENDING',
+                instructorProfileId,
+            },
+        });
+    }
+    async listMine(userId) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        return this.listByInstructor(instructorProfileId);
+    }
+    async updateMine(userId, id, dto) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        const vehicle = await this.prisma.vehicle.findFirst({ where: { id, instructorProfileId } });
+        if (!vehicle) {
+            throw new common_1.NotFoundException('Vehicle not found for this instructor.');
+        }
+        return this.prisma.vehicle.update({
+            where: { id },
+            data: {
+                plate: dto.plate,
+                brand: dto.brand,
+                model: dto.model,
+                year: dto.year,
+                transmissionType: dto.transmissionType,
+                categorySupported: dto.categorySupported,
+                verificationStatus: dto.verificationStatus,
+            },
+        });
+    }
+    async removeMine(userId, id) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        const vehicle = await this.prisma.vehicle.findFirst({ where: { id, instructorProfileId } });
+        if (!vehicle) {
+            throw new common_1.NotFoundException('Vehicle not found for this instructor.');
+        }
+        return this.prisma.vehicle.delete({ where: { id } });
+    }
 };
 exports.VehiclesService = VehiclesService;
 exports.VehiclesService = VehiclesService = __decorate([

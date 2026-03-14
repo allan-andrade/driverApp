@@ -41,7 +41,7 @@ let SchoolsController = class SchoolsController {
 exports.SchoolsController = SchoolsController;
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.SCHOOL_MANAGER),
-    (0, common_1.Post)('me'),
+    (0, common_1.Patch)('my-school'),
     __param(0, (0, current_user_decorator_1.CurrentUser)('userId')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -50,7 +50,7 @@ __decorate([
 ], SchoolsController.prototype, "upsert", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.SCHOOL_MANAGER),
-    (0, common_1.Get)('me'),
+    (0, common_1.Get)('my-school'),
     __param(0, (0, current_user_decorator_1.CurrentUser)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

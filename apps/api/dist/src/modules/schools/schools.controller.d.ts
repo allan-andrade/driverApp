@@ -8,13 +8,13 @@ export declare class SchoolsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        state: string;
-        city: string;
+        state: string | null;
+        city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         legalName: string;
         tradeName: string;
         cnpj: string;
-        address: string;
+        address: string | null;
         managerUserId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     mySchool(userId: string): import(".prisma/client").Prisma.Prisma__SchoolClient<({
@@ -37,15 +37,15 @@ export declare class SchoolsController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                state: string;
-                city: string;
                 userId: string;
+                state: string | null;
+                city: string | null;
                 instructorType: import(".prisma/client").$Enums.InstructorType;
                 verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-                bio: string;
-                yearsExperience: number;
-                serviceRadiusKm: number;
-                basePrice: import("@prisma/client/runtime/library").Decimal;
+                bio: string | null;
+                yearsExperience: number | null;
+                serviceRadiusKm: number | null;
+                basePrice: import("@prisma/client/runtime/library").Decimal | null;
                 isActive: boolean;
                 categories: import(".prisma/client").$Enums.CnhCategory[];
             };
@@ -60,13 +60,13 @@ export declare class SchoolsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        state: string;
-        city: string;
+        state: string | null;
+        city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         legalName: string;
         tradeName: string;
         cnpj: string;
-        address: string;
+        address: string | null;
         managerUserId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     linkInstructor(userId: string, dto: LinkInstructorDto): Promise<{
@@ -80,13 +80,13 @@ export declare class SchoolsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        state: string;
-        city: string;
+        state: string | null;
+        city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         legalName: string;
         tradeName: string;
         cnpj: string;
-        address: string;
+        address: string | null;
         managerUserId: string | null;
     }[]>;
 }

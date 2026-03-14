@@ -12,7 +12,7 @@ const nav = [
 export default function AdminInstructorsPage() {
   return (
     <DashboardShell title="Instrutores" nav={nav}>
-      <QueryPanel title="Lista de instrutores" path="/instructors" />
+      <QueryPanel title="Lista de instrutores" path="/admin/instructors" />
     </DashboardShell>
   );
 }

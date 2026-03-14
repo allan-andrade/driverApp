@@ -40,14 +40,17 @@ __decorate([
     __metadata("design:type", String)
 ], UpsertSchoolDto.prototype, "verificationStatus", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertSchoolDto.prototype, "address", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertSchoolDto.prototype, "city", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertSchoolDto.prototype, "state", void 0);

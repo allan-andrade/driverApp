@@ -19,6 +19,7 @@ const public_decorator_1 = require("../../common/decorators/public.decorator");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 const refresh_token_dto_1 = require("./dto/refresh-token.dto");
+const refresh_token_guard_1 = require("./guards/refresh-token.guard");
 const register_dto_1 = require("./dto/register.dto");
 let AuthController = class AuthController {
     authService;
@@ -36,6 +37,9 @@ let AuthController = class AuthController {
     }
     logout(userId) {
         return this.authService.logout(userId);
+    }
+    me(userId) {
+        return this.authService.getSession(userId);
     }
     session(userId) {
         return this.authService.getSession(userId);
@@ -60,6 +64,7 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, public_decorator_1.Public)(),
+    (0, common_1.UseGuards)(refresh_token_guard_1.RefreshTokenGuard),
     (0, common_1.Post)('refresh'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -73,6 +78,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.Get)('me'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "me", null);
 __decorate([
     (0, common_1.Get)('session'),
     __param(0, (0, current_user_decorator_1.CurrentUser)('userId')),

@@ -5,20 +5,20 @@ export declare class AvailabilityController {
     constructor(availabilityService: AvailabilityService);
     create(dto: CreateSlotDto): import(".prisma/client").Prisma.Prisma__AvailabilitySlotClient<{
         id: string;
+        instructorProfileId: string;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        instructorProfileId: string;
         weekday: number;
         startTime: string;
         endTime: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     list(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        instructorProfileId: string;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        instructorProfileId: string;
         weekday: number;
         startTime: string;
         endTime: string;

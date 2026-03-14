@@ -10,57 +10,82 @@ export declare class BookingsController {
         role: UserRole;
     }, dto: CreateBookingDto): Promise<{
         id: string;
-        scheduledStart: Date;
-        scheduledEnd: Date;
-        priceTotal: import("@prisma/client/runtime/library").Decimal;
-        platformFee: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        candidateProfileId: string;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        priceTotal: import("@prisma/client/runtime/library").Decimal;
+        platformFee: import("@prisma/client/runtime/library").Decimal;
+        scheduledStart: Date;
+        scheduledEnd: Date;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        candidateProfileId: string;
         packageId: string | null;
+    } & {
+        priceTotal: number;
+        platformFee: number;
     }>;
     listMine(user: {
         userId: string;
         role: UserRole;
     }): Promise<{
         id: string;
-        scheduledStart: Date;
-        scheduledEnd: Date;
-        priceTotal: import("@prisma/client/runtime/library").Decimal;
-        platformFee: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        candidateProfileId: string;
         instructorProfileId: string | null;
         schoolId: string | null;
-        packageId: string | null;
-    }[]>;
-    list(candidateProfileId?: string, instructorProfileId?: string, schoolId?: string): import(".prisma/client").Prisma.PrismaPromise<{
-        id: string;
-        scheduledStart: Date;
-        scheduledEnd: Date;
-        priceTotal: import("@prisma/client/runtime/library").Decimal;
-        platformFee: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
         updatedAt: Date;
+        priceTotal: import("@prisma/client/runtime/library").Decimal;
+        platformFee: import("@prisma/client/runtime/library").Decimal;
+        scheduledStart: Date;
+        scheduledEnd: Date;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
         candidateProfileId: string;
-        instructorProfileId: string | null;
-        schoolId: string | null;
         packageId: string | null;
     }[]>;
-    findOne(id: string): import(".prisma/client").Prisma.Prisma__BookingClient<({
+    list(candidateProfileId?: string, instructorProfileId?: string, schoolId?: string): Promise<({
+        instructorProfile: {
+            id: string;
+            user: {
+                email: string;
+            };
+        } | null;
         package: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
+            title: string;
+        } | null;
+        candidateProfile: {
+            id: string;
+            fullName: string;
+        };
+    } & {
+        id: string;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        priceTotal: import("@prisma/client/runtime/library").Decimal;
+        platformFee: import("@prisma/client/runtime/library").Decimal;
+        scheduledStart: Date;
+        scheduledEnd: Date;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        candidateProfileId: string;
+        packageId: string | null;
+    } & {
+        priceTotal: number;
+        platformFee: number;
+    })[]>;
+    findOne(id: string): Promise<({
+        instructorProfile: {
+            id: string;
+            user: {
+                email: string;
+            };
+        } | null;
+        package: {
+            id: string;
             instructorProfileId: string | null;
             schoolId: string | null;
             title: string;
@@ -69,14 +94,20 @@ export declare class BookingsController {
             category: import(".prisma/client").$Enums.CnhCategory;
             price: import("@prisma/client/runtime/library").Decimal;
             usesInstructorVehicle: boolean;
-        } | null;
-        lessons: {
-            id: string;
-            status: import(".prisma/client").$Enums.LessonStatus;
             createdAt: Date;
             updatedAt: Date;
-            candidateProfileId: string;
+        } | null;
+        candidateProfile: {
+            id: string;
+            fullName: string;
+        };
+        lessons: {
+            id: string;
             instructorProfileId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.LessonStatus;
+            candidateProfileId: string;
             bookingId: string;
             vehicleId: string | null;
             pinCode: string;
@@ -90,47 +121,56 @@ export declare class BookingsController {
         }[];
     } & {
         id: string;
-        scheduledStart: Date;
-        scheduledEnd: Date;
-        priceTotal: import("@prisma/client/runtime/library").Decimal;
-        platformFee: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        candidateProfileId: string;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        priceTotal: import("@prisma/client/runtime/library").Decimal;
+        platformFee: import("@prisma/client/runtime/library").Decimal;
+        scheduledStart: Date;
+        scheduledEnd: Date;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        candidateProfileId: string;
         packageId: string | null;
-    }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
-    cancel(id: string): Promise<{
+    } & {
+        priceTotal: number;
+        platformFee: number;
+    }) | null>;
+    cancel(id: string, actorUserId: string): Promise<{
         id: string;
-        scheduledStart: Date;
-        scheduledEnd: Date;
-        priceTotal: import("@prisma/client/runtime/library").Decimal;
-        platformFee: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        candidateProfileId: string;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        priceTotal: import("@prisma/client/runtime/library").Decimal;
+        platformFee: import("@prisma/client/runtime/library").Decimal;
+        scheduledStart: Date;
+        scheduledEnd: Date;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        candidateProfileId: string;
         packageId: string | null;
+    } & {
+        priceTotal: number;
+        platformFee: number;
     }>;
-    reschedule(id: string, dto: RescheduleBookingDto): Promise<{
+    reschedule(id: string, dto: RescheduleBookingDto, actorUserId: string): Promise<{
         id: string;
-        scheduledStart: Date;
-        scheduledEnd: Date;
-        priceTotal: import("@prisma/client/runtime/library").Decimal;
-        platformFee: import("@prisma/client/runtime/library").Decimal;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        candidateProfileId: string;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        priceTotal: import("@prisma/client/runtime/library").Decimal;
+        platformFee: import("@prisma/client/runtime/library").Decimal;
+        scheduledStart: Date;
+        scheduledEnd: Date;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        candidateProfileId: string;
         packageId: string | null;
+    } & {
+        priceTotal: number;
+        platformFee: number;
     }>;
 }

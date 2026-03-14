@@ -9,31 +9,39 @@ export class UpsertInstructorDto {
   @IsEnum(VerificationStatus)
   verificationStatus?: VerificationStatus;
 
+  @IsOptional()
   @IsString()
-  bio!: string;
+  bio?: string;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
-  yearsExperience!: number;
+  yearsExperience?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
-  serviceRadiusKm!: number;
+  serviceRadiusKm?: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(1)
-  basePrice!: number;
+  basePrice?: number;
 
+  @IsOptional()
   @IsBoolean()
-  isActive!: boolean;
+  isActive?: boolean;
 
+  @IsOptional()
   @IsArray()
   @IsEnum(CnhCategory, { each: true })
-  categories!: CnhCategory[];
+  categories?: CnhCategory[];
 
+  @IsOptional()
   @IsString()
-  city!: string;
+  city?: string;
 
+  @IsOptional()
   @IsString()
-  state!: string;
+  state?: string;
 }

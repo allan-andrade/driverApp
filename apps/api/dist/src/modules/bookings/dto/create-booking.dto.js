@@ -51,11 +51,15 @@ __decorate([
     __metadata("design:type", String)
 ], CreateBookingDto.prototype, "scheduledEnd", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateBookingDto.prototype, "priceTotal", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateBookingDto.prototype, "platformFee", void 0);
 //# sourceMappingURL=create-booking.dto.js.map

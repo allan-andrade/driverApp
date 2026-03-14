@@ -11,7 +11,7 @@ const nav = [
 export default function SchoolInstructorsPage() {
   return (
     <DashboardShell title="Instrutores Vinculados" nav={nav}>
-      <QueryPanel title="Instrutores da escola" path="/schools/me" />
+      <QueryPanel title="Instrutores da escola" path="/schools/my-school" />
     </DashboardShell>
   );
 }

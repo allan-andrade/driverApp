@@ -41,6 +41,12 @@ export declare class AuthController {
     logout(userId: string): Promise<{
         ok: boolean;
     }>;
+    me(userId: string): Promise<{
+        id: string;
+        email: string;
+        role: import(".prisma/client").$Enums.UserRole;
+        status: import(".prisma/client").$Enums.UserStatus;
+    }>;
     session(userId: string): Promise<{
         id: string;
         email: string;

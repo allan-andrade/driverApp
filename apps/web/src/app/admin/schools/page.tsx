@@ -12,7 +12,7 @@ const nav = [
 export default function AdminSchoolsPage() {
   return (
     <DashboardShell title="Autoescolas" nav={nav}>
-      <QueryPanel title="Lista de autoescolas" path="/schools" />
+      <QueryPanel title="Lista de autoescolas" path="/admin/schools" />
     </DashboardShell>
   );
 }

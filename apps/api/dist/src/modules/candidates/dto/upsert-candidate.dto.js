@@ -30,30 +30,37 @@ __decorate([
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "fullName", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "cpf", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "birthDate", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "state", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "city", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(client_1.CnhCategory),
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "targetCategory", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(client_1.LearningStage),
     __metadata("design:type", String)
 ], UpsertCandidateDto.prototype, "learningStage", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpsertCandidateDto.prototype, "hasVehicle", void 0);

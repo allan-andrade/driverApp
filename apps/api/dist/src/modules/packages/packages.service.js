@@ -26,6 +26,49 @@ let PackagesService = class PackagesService {
     listBySchool(schoolId) {
         return this.prisma.package.findMany({ where: { schoolId } });
     }
+    async findOne(id) {
+        const item = await this.prisma.package.findUnique({ where: { id } });
+        if (!item) {
+            throw new common_1.NotFoundException('Package not found.');
+        }
+        return item;
+    }
+    async getInstructorProfileIdByUserId(userId) {
+        const profile = await this.prisma.instructorProfile.findUnique({ where: { userId } });
+        if (!profile) {
+            throw new common_1.NotFoundException('Instructor profile not found for this user.');
+        }
+        return profile.id;
+    }
+    async createMine(userId, dto) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        return this.prisma.package.create({
+            data: {
+                ...dto,
+                instructorProfileId,
+            },
+        });
+    }
+    async listMine(userId) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        return this.listByInstructor(instructorProfileId);
+    }
+    async updateMine(userId, id, dto) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        const item = await this.prisma.package.findFirst({ where: { id, instructorProfileId } });
+        if (!item) {
+            throw new common_1.NotFoundException('Package not found for this instructor.');
+        }
+        return this.prisma.package.update({ where: { id }, data: dto });
+    }
+    async removeMine(userId, id) {
+        const instructorProfileId = await this.getInstructorProfileIdByUserId(userId);
+        const item = await this.prisma.package.findFirst({ where: { id, instructorProfileId } });
+        if (!item) {
+            throw new common_1.NotFoundException('Package not found for this instructor.');
+        }
+        return this.prisma.package.delete({ where: { id } });
+    }
 };
 exports.PackagesService = PackagesService;
 exports.PackagesService = PackagesService = __decorate([

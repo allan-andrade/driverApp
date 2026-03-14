@@ -1,5 +1,5 @@
 import { DashboardShell } from '@/components/dashboard-shell';
-import { QueryPanel } from '@/components/query-panel';
+import { CandidateBookingDetails } from '@/components/candidate-booking-details';
 
 const nav = [
   { href: '/candidate/dashboard', label: 'Dashboard' },
@@ -11,7 +11,7 @@ const nav = [
 export default function CandidateBookingDetailsPage({ params }: { params: { id: string } }) {
   return (
     <DashboardShell title="Detalhe da Reserva" nav={nav}>
-      <QueryPanel title="Detalhe" path={`/bookings/${params.id}`} />
+      <CandidateBookingDetails bookingId={params.id} />
     </DashboardShell>
   );
 }

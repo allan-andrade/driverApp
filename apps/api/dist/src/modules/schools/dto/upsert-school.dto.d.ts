@@ -4,7 +4,7 @@ export declare class UpsertSchoolDto {
     tradeName: string;
     cnpj: string;
     verificationStatus?: VerificationStatus;
-    address: string;
-    city: string;
-    state: string;
+    address?: string;
+    city?: string;
+    state?: string;
 }

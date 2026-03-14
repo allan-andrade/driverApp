@@ -5,12 +5,12 @@ export declare class LessonsService {
     constructor(prisma: PrismaService);
     listByInstructor(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;
@@ -23,12 +23,12 @@ export declare class LessonsService {
     }[]>;
     listMine(userId: string): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;
@@ -41,12 +41,12 @@ export declare class LessonsService {
     }[]>;
     checkIn(lessonId: string, dto: VerifyPinDto): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;
@@ -59,12 +59,12 @@ export declare class LessonsService {
     }>;
     finish(lessonId: string, endLat?: number, endLng?: number): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.LessonStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LessonStatus;
-        candidateProfileId: string;
         instructorProfileId: string;
         bookingId: string;
+        candidateProfileId: string;
         vehicleId: string | null;
         pinCode: string;
         pinVerified: boolean;

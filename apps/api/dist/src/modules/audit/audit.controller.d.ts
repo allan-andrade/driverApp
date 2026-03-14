@@ -7,7 +7,7 @@ export declare class AuditController {
         id: string;
         createdAt: Date;
         entityType: import(".prisma/client").$Enums.EntityType;
-        metadataJson: import("@prisma/client/runtime/library").JsonValue;
+        metadataJson: import("@prisma/client/runtime/library").JsonValue | null;
         entityId: string;
         action: string;
         actorUserId: string | null;
@@ -16,7 +16,7 @@ export declare class AuditController {
         id: string;
         createdAt: Date;
         entityType: import(".prisma/client").$Enums.EntityType;
-        metadataJson: import("@prisma/client/runtime/library").JsonValue;
+        metadataJson: import("@prisma/client/runtime/library").JsonValue | null;
         entityId: string;
         action: string;
         actorUserId: string | null;

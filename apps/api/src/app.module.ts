@@ -17,6 +17,8 @@ import { AuditModule } from './modules/audit/audit.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { QueueModule } from './modules/queue/queue.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { PrismaService } from './prisma.service';
@@ -40,6 +42,8 @@ import { PrismaService } from './prisma.service';
     PaymentsModule,
     DashboardModule,
     QueueModule,
+    AdminModule,
+    MarketplaceModule,
   ],
   providers: [
     PrismaService,

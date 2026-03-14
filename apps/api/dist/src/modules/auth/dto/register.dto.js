@@ -9,9 +9,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegisterDto = void 0;
-const client_1 = require("@prisma/client");
+exports.RegisterDto = exports.RegisterRole = void 0;
 const class_validator_1 = require("class-validator");
+var RegisterRole;
+(function (RegisterRole) {
+    RegisterRole["CANDIDATE"] = "CANDIDATE";
+    RegisterRole["INSTRUCTOR"] = "INSTRUCTOR";
+    RegisterRole["SCHOOL_MANAGER"] = "SCHOOL_MANAGER";
+})(RegisterRole || (exports.RegisterRole = RegisterRole = {}));
 class RegisterDto {
     email;
     phone;
@@ -34,7 +39,7 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(client_1.UserRole),
+    (0, class_validator_1.IsEnum)(RegisterRole),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "role", void 0);
 //# sourceMappingURL=register.dto.js.map

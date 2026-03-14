@@ -106,18 +106,21 @@ model User {
   instructorProfile  InstructorProfile?
   schoolManager      School?
   auditLogs          AuditLog[]
+
+  @@index([role])
+  @@index([status])
 }
 
 model CandidateProfile {
   id                        String         @id @default(cuid())
   userId                    String         @unique
   fullName                  String
-  cpf                       String         @unique
-  birthDate                 DateTime
-  state                     String
-  city                      String
-  targetCategory            CnhCategory
-  learningStage             LearningStage
+  cpf                       String?        @unique
+  birthDate                 DateTime?
+  state                     String?
+  city                      String?
+  targetCategory            CnhCategory?
+  learningStage             LearningStage?
   hasVehicle                Boolean        @default(false)
   preferredLanguage         String?
   preferredInstructorGender String?
@@ -127,6 +130,8 @@ model CandidateProfile {
   bookings                  Booking[]
   lessons                   Lesson[]
   reviews                   Review[]
+
+  @@index([state, city])
 }
 
 model InstructorProfile {
@@ -134,14 +139,14 @@ model InstructorProfile {
   userId             String              @unique
   instructorType     InstructorType
   verificationStatus VerificationStatus  @default(PENDING)
-  bio                String
-  yearsExperience    Int                 @default(0)
-  serviceRadiusKm    Int                 @default(10)
-  basePrice          Decimal             @db.Decimal(10, 2)
+  bio                String?
+  yearsExperience    Int?
+  serviceRadiusKm    Int?
+  basePrice          Decimal?            @db.Decimal(10, 2)
   isActive           Boolean             @default(true)
-  categories         CnhCategory[]
-  city               String
-  state              String
+  categories         CnhCategory[]       @default([])
+  city               String?
+  state              String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   user               User                @relation(fields: [userId], references: [id])
@@ -152,6 +157,9 @@ model InstructorProfile {
   bookings           Booking[]
   lessons            Lesson[]
   reviews            Review[]
+
+  @@index([verificationStatus, isActive])
+  @@index([city, state])
 }
 
 model School {
@@ -160,9 +168,9 @@ model School {
   tradeName          String
   cnpj               String              @unique
   verificationStatus VerificationStatus  @default(PENDING)
-  address            String
-  city               String
-  state              String
+  address            String?
+  city               String?
+  state              String?
   managerUserId      String?             @unique
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -171,6 +179,8 @@ model School {
   vehicles           Vehicle[]
   packages           Package[]
   bookings           Booking[]
+
+  @@index([state, city])
 }
 
 model InstructorSchoolLink {
@@ -307,6 +317,7 @@ model StatePolicy {
   updatedAt   DateTime @updatedAt
 
   @@unique([stateCode])
+  @@index([isActive])
 }
 
 model DocumentRequirement {
@@ -326,9 +337,12 @@ model AuditLog {
   entityType  EntityType
   entityId    String
   action      String
-  metadataJson Json
+  metadataJson Json?
   createdAt   DateTime @default(now())
   actorUser   User?    @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }
 
 model Payment {

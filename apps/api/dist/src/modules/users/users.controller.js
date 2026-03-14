@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const users_service_1 = require("./users.service");
 let UsersController = class UsersController {
@@ -22,21 +23,27 @@ let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    findAll() {
-        return this.usersService.listAll();
+    me(userId) {
+        return this.usersService.findById(userId);
     }
     findByRole(role) {
         return this.usersService.listByRole(role);
     }
+    findOne(id) {
+        return this.usersService.findById(id);
+    }
+    findAll() {
+        return this.usersService.listAll();
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
-    (0, common_1.Get)(),
+    (0, common_1.Get)('me'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], UsersController.prototype, "findAll", null);
+], UsersController.prototype, "me", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Get)('role/:role'),
@@ -45,6 +52,21 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findByRole", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "findOne", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "findAll", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService])

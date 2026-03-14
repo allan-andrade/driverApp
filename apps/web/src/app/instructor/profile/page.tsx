@@ -1,5 +1,5 @@
 import { DashboardShell } from '@/components/dashboard-shell';
-import { QueryPanel } from '@/components/query-panel';
+import { InstructorProfileManager } from '@/components/instructor-profile-manager';
 
 const nav = [
   { href: '/instructor/dashboard', label: 'Dashboard' },
@@ -12,7 +12,7 @@ const nav = [
 export default function InstructorProfilePage() {
   return (
     <DashboardShell title="Perfil do Instrutor" nav={nav}>
-      <QueryPanel title="Dados do perfil" path="/instructors/me" />
+      <InstructorProfileManager />
     </DashboardShell>
   );
 }

@@ -33,6 +33,10 @@ export class ComplianceService {
     return this.prisma.statePolicy.findMany({ orderBy: { stateCode: 'asc' } });
   }
 
+  findPolicyByStateCode(stateCode: string) {
+    return this.prisma.statePolicy.findUnique({ where: { stateCode } });
+  }
+
   createDocumentRequirement(dto: CreateDocumentRequirementDto) {
     return this.prisma.documentRequirement.create({
       data: {
