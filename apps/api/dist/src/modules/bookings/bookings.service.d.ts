@@ -1,16 +1,15 @@
 import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { PaymentsService } from '../payments/payments.service';
 import { PackagesService } from '../packages/packages.service';
+import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 export declare class BookingsService {
     private readonly prisma;
     private readonly auditService;
-    private readonly paymentsService;
     private readonly packagesService;
-    constructor(prisma: PrismaService, auditService: AuditService, paymentsService: PaymentsService, packagesService: PackagesService);
+    constructor(prisma: PrismaService, auditService: AuditService, packagesService: PackagesService);
     private toMinutes;
     private validateWindow;
     private getWeekdayUtc;
@@ -18,7 +17,10 @@ export declare class BookingsService {
     private validateInstructorAvailability;
     private validateInstructorConflict;
     private calculateAmounts;
+    private buildPinCode;
     private normalizeBooking;
+    private resolveActorScope;
+    private assertBookingAccess;
     create(dto: CreateBookingDto, actorUserId?: string): Promise<{
         id: string;
         instructorProfileId: string | null;
@@ -31,6 +33,8 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
@@ -49,6 +53,8 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
@@ -60,20 +66,20 @@ export declare class BookingsService {
         instructorProfileId?: string;
         schoolId?: string;
     }): Promise<({
-        instructorProfile: {
+        candidateProfile: {
             id: string;
+            fullName: string;
+        };
+        instructorProfile: {
             user: {
                 email: string;
             };
+            id: string;
         } | null;
         package: {
             id: string;
             title: string;
         } | null;
-        candidateProfile: {
-            id: string;
-            fullName: string;
-        };
     } & {
         id: string;
         instructorProfileId: string | null;
@@ -86,6 +92,8 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
@@ -104,10 +112,15 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     }[]>;
-    cancel(id: string, actorUserId?: string): Promise<{
+    cancel(id: string, dto: CancelBookingDto, actorUser?: {
+        userId: string;
+        role: UserRole;
+    }): Promise<{
         id: string;
         instructorProfileId: string | null;
         schoolId: string | null;
@@ -119,13 +132,18 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
         priceTotal: number;
         platformFee: number;
     }>;
-    reschedule(id: string, dto: RescheduleBookingDto, actorUserId?: string): Promise<{
+    reschedule(id: string, dto: RescheduleBookingDto, actorUser?: {
+        userId: string;
+        role: UserRole;
+    }): Promise<{
         id: string;
         instructorProfileId: string | null;
         schoolId: string | null;
@@ -137,6 +155,8 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
@@ -144,20 +164,20 @@ export declare class BookingsService {
         platformFee: number;
     }>;
     listMineAsInstructor(userId: string): Promise<({
-        instructorProfile: {
+        candidateProfile: {
             id: string;
+            fullName: string;
+        };
+        instructorProfile: {
             user: {
                 email: string;
             };
+            id: string;
         } | null;
         package: {
             id: string;
             title: string;
         } | null;
-        candidateProfile: {
-            id: string;
-            fullName: string;
-        };
     } & {
         id: string;
         instructorProfileId: string | null;
@@ -170,18 +190,24 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
         priceTotal: number;
         platformFee: number;
     })[]>;
-    findOne(id: string): Promise<({
-        instructorProfile: {
+    findOne(id: string, userId: string, role: UserRole): Promise<({
+        candidateProfile: {
             id: string;
+            fullName: string;
+        };
+        instructorProfile: {
             user: {
                 email: string;
             };
+            id: string;
         } | null;
         package: {
             id: string;
@@ -196,10 +222,6 @@ export declare class BookingsService {
             createdAt: Date;
             updatedAt: Date;
         } | null;
-        candidateProfile: {
-            id: string;
-            fullName: string;
-        };
         lessons: {
             id: string;
             instructorProfileId: string;
@@ -217,6 +239,9 @@ export declare class BookingsService {
             startLng: number | null;
             endLat: number | null;
             endLng: number | null;
+            startAddress: string | null;
+            endAddress: string | null;
+            notes: string | null;
         }[];
     } & {
         id: string;
@@ -230,6 +255,8 @@ export declare class BookingsService {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {

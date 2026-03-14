@@ -13,8 +13,6 @@ exports.VerifyPinDto = void 0;
 const class_validator_1 = require("class-validator");
 class VerifyPinDto {
     pinCode;
-    startLat;
-    startLng;
 }
 exports.VerifyPinDto = VerifyPinDto;
 __decorate([
@@ -22,12 +20,4 @@ __decorate([
     (0, class_validator_1.Length)(4, 4),
     __metadata("design:type", String)
 ], VerifyPinDto.prototype, "pinCode", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], VerifyPinDto.prototype, "startLat", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], VerifyPinDto.prototype, "startLng", void 0);
 //# sourceMappingURL=verify-pin.dto.js.map

@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { BookingsService } from './bookings.service';
+import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 
@@ -29,7 +30,7 @@ export class BookingsController {
     return this.bookingsService.listMine(user.userId, user.role);
   }
 
-  @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER, UserRole.ADMIN)
+  @Roles(UserRole.ADMIN)
   @Get()
   list(
     @Query('candidateProfileId') candidateProfileId?: string,
@@ -41,14 +42,18 @@ export class BookingsController {
 
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER, UserRole.ADMIN)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookingsService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: { userId: string; role: UserRole }) {
+    return this.bookingsService.findOne(id, user.userId, user.role);
   }
 
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER)
   @Patch(':id/cancel')
-  cancel(@Param('id') id: string, @CurrentUser('userId') actorUserId: string) {
-    return this.bookingsService.cancel(id, actorUserId);
+  cancel(
+    @Param('id') id: string,
+    @Body() dto: CancelBookingDto,
+    @CurrentUser() user: { userId: string; role: UserRole },
+  ) {
+    return this.bookingsService.cancel(id, dto, user);
   }
 
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER)
@@ -56,8 +61,8 @@ export class BookingsController {
   reschedule(
     @Param('id') id: string,
     @Body() dto: RescheduleBookingDto,
-    @CurrentUser('userId') actorUserId: string,
+    @CurrentUser() user: { userId: string; role: UserRole },
   ) {
-    return this.bookingsService.reschedule(id, dto, actorUserId);
+    return this.bookingsService.reschedule(id, dto, user);
   }
 }

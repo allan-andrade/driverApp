@@ -27,6 +27,7 @@ enum InstructorType {
 
 enum VerificationStatus {
   PENDING
+  VERIFIED
   APPROVED
   REJECTED
 }
@@ -61,9 +62,11 @@ enum BookingStatus {
 
 enum LessonStatus {
   SCHEDULED
+  CHECK_IN_PENDING
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  NO_SHOW
 }
 
 enum LearningStage {
@@ -75,9 +78,57 @@ enum LearningStage {
 enum PaymentStatus {
   PENDING
   AUTHORIZED
+  CAPTURED
   PAID
+  CANCELLED
   REFUNDED
   FAILED
+}
+
+enum PaymentMethod {
+  PIX
+  CARD
+  CASH
+  MANUAL
+}
+
+enum PayoutStatus {
+  PENDING
+  SCHEDULED
+  PAID
+  FAILED
+  ON_HOLD
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+  CANCELLED
+}
+
+enum IncidentType {
+  SAFETY
+  HARASSMENT
+  NO_SHOW
+  FRAUD
+  VEHICLE_ISSUE
+  OTHER
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
 }
 
 enum EntityType {
@@ -88,8 +139,13 @@ enum EntityType {
   VEHICLE
   BOOKING
   LESSON
+  PAYMENT
+  PAYOUT
+  DISPUTE
+  INCIDENT_REPORT
   STATE_POLICY
   DOCUMENT_REQUIREMENT
+  DOCUMENT_SUBMISSION
 }
 
 model User {
@@ -106,6 +162,11 @@ model User {
   instructorProfile  InstructorProfile?
   schoolManager      School?
   auditLogs          AuditLog[]
+  disputesOpened     Dispute[]            @relation("DisputeOpenedBy")
+  incidentReports    IncidentReport[]     @relation("IncidentReportedBy")
+  incidentReported   IncidentReport[]     @relation("IncidentReportedUser")
+  documentSubmissions DocumentSubmission[] @relation("DocumentSubmissionUser")
+  reviewedSubmissions DocumentSubmission[] @relation("DocumentSubmissionReviewer")
 
   @@index([role])
   @@index([status])
@@ -130,6 +191,7 @@ model CandidateProfile {
   bookings                  Booking[]
   lessons                   Lesson[]
   reviews                   Review[]
+  payments                  Payment[]
 
   @@index([state, city])
 }
@@ -157,6 +219,9 @@ model InstructorProfile {
   bookings           Booking[]
   lessons            Lesson[]
   reviews            Review[]
+  payments           Payment[]
+  payouts            Payout[]
+  documentSubmissions DocumentSubmission[]
 
   @@index([verificationStatus, isActive])
   @@index([city, state])
@@ -179,6 +244,9 @@ model School {
   vehicles           Vehicle[]
   packages           Package[]
   bookings           Booking[]
+  payments           Payment[]
+  payouts            Payout[]
+  documentSubmissions DocumentSubmission[]
 
   @@index([state, city])
 }
@@ -254,6 +322,8 @@ model Booking {
   platformFee         Decimal           @db.Decimal(10, 2)
   status              BookingStatus     @default(PENDING)
   paymentStatus       PaymentStatus     @default(PENDING)
+  cancelReason        String?
+  rescheduleReason    String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   candidateProfile    CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
@@ -263,6 +333,8 @@ model Booking {
   lessons             Lesson[]
   reviews             Review[]
   payments            Payment[]
+  disputes            Dispute[]
+  incidentReports     IncidentReport[]
 }
 
 model Lesson {
@@ -280,12 +352,17 @@ model Lesson {
   startLng            Float?
   endLat              Float?
   endLng              Float?
+  startAddress        String?
+  endAddress          String?
+  notes               String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   booking             Booking           @relation(fields: [bookingId], references: [id])
   candidateProfile    CandidateProfile  @relation(fields: [candidateProfileId], references: [id])
   instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
   vehicle             Vehicle?          @relation(fields: [vehicleId], references: [id])
+  disputes            Dispute[]
+  incidentReports     IncidentReport[]
 }
 
 model Review {
@@ -348,12 +425,101 @@ model AuditLog {
 model Payment {
   id                 String        @id @default(cuid())
   bookingId          String
+  candidateProfileId String
+  instructorProfileId String?
+  schoolId           String?
+  providerReference  String?
   status             PaymentStatus @default(PENDING)
   amount             Decimal       @db.Decimal(10, 2)
+  platformFee        Decimal       @default(0) @db.Decimal(10, 2)
+  currency           String        @default("BRL")
+  method             PaymentMethod @default(MANUAL)
+  capturedAt         DateTime?
+  refundedAt         DateTime?
   provider           String?
   providerPaymentId  String?
   splitMetadataJson  Json?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   booking            Booking       @relation(fields: [bookingId], references: [id])
+  candidateProfile   CandidateProfile @relation(fields: [candidateProfileId], references: [id])
+  instructorProfile  InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  school             School?       @relation(fields: [schoolId], references: [id])
+  payouts            Payout[]
+  disputes           Dispute[]
+}
+
+model Payout {
+  id                 String       @id @default(cuid())
+  paymentId          String
+  instructorProfileId String?
+  schoolId           String?
+  amountNet          Decimal      @db.Decimal(10, 2)
+  status             PayoutStatus @default(PENDING)
+  scheduledAt        DateTime?
+  paidAt             DateTime?
+  provider           String?
+  providerReference  String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  payment            Payment      @relation(fields: [paymentId], references: [id])
+  instructorProfile  InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  school             School?      @relation(fields: [schoolId], references: [id])
+}
+
+model Dispute {
+  id                 String       @id @default(cuid())
+  bookingId          String?
+  lessonId           String?
+  paymentId          String?
+  openedByUserId     String
+  reason             String
+  description        String?
+  status             DisputeStatus @default(OPEN)
+  resolution         String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  booking            Booking?     @relation(fields: [bookingId], references: [id])
+  lesson             Lesson?      @relation(fields: [lessonId], references: [id])
+  payment            Payment?     @relation(fields: [paymentId], references: [id])
+  openedBy           User         @relation("DisputeOpenedBy", fields: [openedByUserId], references: [id])
+}
+
+model IncidentReport {
+  id                 String         @id @default(cuid())
+  lessonId           String?
+  bookingId          String?
+  reporterUserId     String
+  reportedUserId     String?
+  type               IncidentType
+  severity           IncidentSeverity
+  description        String
+  evidenceUrl        String?
+  status             IncidentStatus     @default(OPEN)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  lesson             Lesson?        @relation(fields: [lessonId], references: [id])
+  booking            Booking?       @relation(fields: [bookingId], references: [id])
+  reporterUser       User           @relation("IncidentReportedBy", fields: [reporterUserId], references: [id])
+  reportedUser       User?          @relation("IncidentReportedUser", fields: [reportedUserId], references: [id])
+}
+
+model DocumentSubmission {
+  id                  String             @id @default(cuid())
+  userId              String?
+  instructorProfileId String?
+  schoolId            String?
+  stateCode           String
+  documentType        String
+  verificationStatus  VerificationStatus @default(PENDING)
+  fileUrl             String
+  metadataJson        Json?
+  reviewedByUserId    String?
+  reviewedAt          DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  user                User?              @relation("DocumentSubmissionUser", fields: [userId], references: [id])
+  instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  school              School?            @relation(fields: [schoolId], references: [id])
+  reviewedByUser      User?              @relation("DocumentSubmissionReviewer", fields: [reviewedByUserId], references: [id])
 }

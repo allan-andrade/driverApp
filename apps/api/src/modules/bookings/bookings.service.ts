@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { BookingStatus, EntityType, LessonStatus, Prisma, UserRole } from '@prisma/client';
+import { BookingStatus, EntityType, LessonStatus, PaymentStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { PaymentsService } from '../payments/payments.service';
 import { PackagesService } from '../packages/packages.service';
+import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 
@@ -12,7 +12,6 @@ export class BookingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
-    private readonly paymentsService: PaymentsService,
     private readonly packagesService: PackagesService,
   ) {}
 
@@ -101,6 +100,10 @@ export class BookingsService {
     return { priceTotal, platformFee };
   }
 
+  private buildPinCode() {
+    return String(Math.floor(1000 + Math.random() * 9000));
+  }
+
   private normalizeBooking<T extends { priceTotal: unknown; platformFee: unknown }>(booking: T) {
     return {
       ...booking,
@@ -109,10 +112,41 @@ export class BookingsService {
     };
   }
 
+  private async resolveActorScope(userId: string, role: UserRole) {
+    const [candidate, instructor, school] = await Promise.all([
+      role === UserRole.CANDIDATE ? this.prisma.candidateProfile.findUnique({ where: { userId } }) : null,
+      role === UserRole.INSTRUCTOR ? this.prisma.instructorProfile.findUnique({ where: { userId } }) : null,
+      role === UserRole.SCHOOL_MANAGER ? this.prisma.school.findUnique({ where: { managerUserId: userId } }) : null,
+    ]);
+
+    return {
+      candidateProfileId: candidate?.id,
+      instructorProfileId: instructor?.id,
+      schoolId: school?.id,
+    };
+  }
+
+  private async assertBookingAccess(booking: { candidateProfileId: string; instructorProfileId: string | null; schoolId: string | null }, userId: string, role: UserRole) {
+    if (role === UserRole.ADMIN) {
+      return;
+    }
+
+    const scope = await this.resolveActorScope(userId, role);
+    const allowed =
+      (scope.candidateProfileId && booking.candidateProfileId === scope.candidateProfileId) ||
+      (scope.instructorProfileId && booking.instructorProfileId === scope.instructorProfileId) ||
+      (scope.schoolId && booking.schoolId === scope.schoolId);
+
+    if (!allowed) {
+      throw new UnauthorizedException('You are not allowed to manage this booking.');
+    }
+  }
+
   async create(dto: CreateBookingDto, actorUserId?: string) {
     if (!dto.candidateProfileId) {
       throw new UnauthorizedException('candidateProfileId is required.');
     }
+    const candidateProfileId = dto.candidateProfileId;
 
     const scheduledStart = new Date(dto.scheduledStart);
     const scheduledEnd = new Date(dto.scheduledEnd);
@@ -135,23 +169,52 @@ export class BookingsService {
 
     const { priceTotal, platformFee } = await this.calculateAmounts(dto);
 
-    const data = {
-      candidateProfileId: dto.candidateProfileId,
-      instructorProfileId: dto.instructorProfileId,
-      schoolId: dto.schoolId,
-      packageId: dto.packageId,
-      scheduledStart,
-      scheduledEnd,
-      priceTotal,
-      platformFee,
-      status: BookingStatus.CONFIRMED,
-    } satisfies Prisma.BookingUncheckedCreateInput;
+    const booking = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.booking.create({
+        data: {
+          candidateProfileId,
+          instructorProfileId: dto.instructorProfileId,
+          schoolId: dto.schoolId,
+          packageId: dto.packageId,
+          scheduledStart,
+          scheduledEnd,
+          priceTotal,
+          platformFee,
+          status: BookingStatus.CONFIRMED,
+          paymentStatus: PaymentStatus.PENDING,
+        } satisfies Prisma.BookingUncheckedCreateInput,
+      });
 
-    const booking = await this.prisma.booking.create({
-      data,
+      await tx.payment.create({
+        data: {
+          bookingId: created.id,
+          candidateProfileId: created.candidateProfileId,
+          instructorProfileId: created.instructorProfileId,
+          schoolId: created.schoolId,
+          amount: Number(priceTotal),
+          platformFee: Number(platformFee),
+          status: PaymentStatus.PENDING,
+          method: 'MANUAL',
+          currency: 'BRL',
+          provider: 'stub',
+          splitMetadataJson: { providerHint: 'stripe|pagarme|asaas' },
+        },
+      });
+
+      if (created.instructorProfileId) {
+        await tx.lesson.create({
+          data: {
+            bookingId: created.id,
+            candidateProfileId: created.candidateProfileId,
+            instructorProfileId: created.instructorProfileId,
+            pinCode: this.buildPinCode(),
+            status: LessonStatus.SCHEDULED,
+          },
+        });
+      }
+
+      return created;
     });
-
-    await this.paymentsService.createPending(booking.id, Number(priceTotal));
 
     await this.auditService.log({
       actorUserId,
@@ -165,18 +228,6 @@ export class BookingsService {
         scheduledEnd: booking.scheduledEnd,
       },
     });
-
-    if (booking.instructorProfileId) {
-      await this.prisma.lesson.create({
-        data: {
-          bookingId: booking.id,
-          candidateProfileId: booking.candidateProfileId,
-          instructorProfileId: booking.instructorProfileId,
-          pinCode: String(Math.floor(1000 + Math.random() * 9000)),
-          status: LessonStatus.SCHEDULED,
-        },
-      });
-    }
 
     return this.normalizeBooking(booking);
   }
@@ -248,35 +299,103 @@ export class BookingsService {
     return this.prisma.booking.findMany({ orderBy: { scheduledStart: 'asc' }, take: 100 });
   }
 
-  async cancel(id: string, actorUserId?: string) {
+  async cancel(id: string, dto: CancelBookingDto, actorUser?: { userId: string; role: UserRole }) {
     const booking = await this.prisma.booking.findUnique({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found.');
+
+    if (actorUser) {
+      await this.assertBookingAccess(booking, actorUser.userId, actorUser.role);
+    }
 
     if (booking.status === BookingStatus.CANCELLED) {
       throw new BadRequestException('Booking is already cancelled.');
     }
 
-    const cancelled = await this.prisma.booking.update({ where: { id }, data: { status: BookingStatus.CANCELLED } });
+    if (booking.status === BookingStatus.COMPLETED) {
+      throw new BadRequestException('Completed bookings cannot be cancelled.');
+    }
+
+    const lesson = await this.prisma.lesson.findFirst({ where: { bookingId: id } });
+    if (lesson?.status === LessonStatus.IN_PROGRESS || lesson?.status === LessonStatus.COMPLETED) {
+      throw new BadRequestException('Cannot cancel booking with lesson already in progress or completed.');
+    }
+
+    const hoursToStart = (booking.scheduledStart.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (actorUser?.role === UserRole.CANDIDATE && hoursToStart < 24) {
+      throw new BadRequestException('Candidate cancellation requires at least 24 hours notice.');
+    }
+    if (actorUser?.role === UserRole.INSTRUCTOR && hoursToStart < 6) {
+      throw new BadRequestException('Instructor cancellation requires at least 6 hours notice.');
+    }
+
+    const cancelled = await this.prisma.booking.update({
+      where: { id },
+      data: {
+        status: BookingStatus.CANCELLED,
+        paymentStatus: PaymentStatus.CANCELLED,
+        cancelReason: dto.reason,
+      },
+    });
+
+    await this.prisma.lesson.updateMany({
+      where: {
+        bookingId: id,
+        status: { in: [LessonStatus.SCHEDULED, LessonStatus.CHECK_IN_PENDING] },
+      },
+      data: {
+        status: LessonStatus.CANCELLED,
+        notes: dto.reason,
+      },
+    });
+
+    await this.prisma.payment.updateMany({
+      where: {
+        bookingId: id,
+        status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+      },
+      data: {
+        status: PaymentStatus.CANCELLED,
+      },
+    });
 
     await this.auditService.log({
-      actorUserId,
+      actorUserId: actorUser?.userId,
       entityType: EntityType.BOOKING,
       entityId: id,
       action: 'BOOKING_CANCELLED',
       metadataJson: {
         previousStatus: booking.status,
+        reason: dto.reason,
       },
     });
 
     return this.normalizeBooking(cancelled);
   }
 
-  async reschedule(id: string, dto: RescheduleBookingDto, actorUserId?: string) {
+  async reschedule(id: string, dto: RescheduleBookingDto, actorUser?: { userId: string; role: UserRole }) {
     const booking = await this.prisma.booking.findUnique({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found.');
 
+    if (actorUser) {
+      await this.assertBookingAccess(booking, actorUser.userId, actorUser.role);
+    }
+
     if (!booking.instructorProfileId) {
       throw new BadRequestException('Booking has no instructor assigned.');
+    }
+
+    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.COMPLETED) {
+      throw new BadRequestException('Only active bookings can be rescheduled.');
+    }
+
+    const lesson = await this.prisma.lesson.findFirst({ where: { bookingId: id } });
+    if (lesson?.status === LessonStatus.IN_PROGRESS || lesson?.status === LessonStatus.COMPLETED) {
+      throw new BadRequestException('Cannot reschedule booking with lesson already in progress or completed.');
+    }
+
+    const currentHoursToStart = (booking.scheduledStart.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (actorUser?.role === UserRole.CANDIDATE && currentHoursToStart < 12) {
+      throw new BadRequestException('Candidate reschedule requires at least 12 hours notice.');
     }
 
     const scheduledStart = new Date(dto.scheduledStart);
@@ -291,11 +410,12 @@ export class BookingsService {
         scheduledStart,
         scheduledEnd,
         status: BookingStatus.RESCHEDULED,
+        rescheduleReason: dto.reason,
       },
     });
 
     await this.auditService.log({
-      actorUserId,
+      actorUserId: actorUser?.userId,
       entityType: EntityType.BOOKING,
       entityId: id,
       action: 'BOOKING_RESCHEDULED',
@@ -304,6 +424,7 @@ export class BookingsService {
         previousEnd: booking.scheduledEnd,
         scheduledStart,
         scheduledEnd,
+        reason: dto.reason,
       },
     });
 
@@ -319,7 +440,7 @@ export class BookingsService {
     return this.list({ instructorProfileId: instructor.id });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string, role: UserRole) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
@@ -347,6 +468,8 @@ export class BookingsService {
     if (!booking) {
       return null;
     }
+
+    await this.assertBookingAccess(booking, userId, role);
 
     return this.normalizeBooking(booking);
   }

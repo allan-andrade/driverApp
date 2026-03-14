@@ -24,22 +24,22 @@ export declare class InstructorsService {
     findMe(userId: string): Prisma.Prisma__InstructorProfileClient<({
         user: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.UserStatus;
             email: string;
             phone: string | null;
             passwordHash: string;
             role: import(".prisma/client").$Enums.UserRole;
-            status: import(".prisma/client").$Enums.UserStatus;
             refreshTokenHash: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
         vehicles: {
             id: string;
+            instructorProfileId: string | null;
+            schoolId: string | null;
             createdAt: Date;
             updatedAt: Date;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-            instructorProfileId: string | null;
-            schoolId: string | null;
             plate: string;
             brand: string;
             model: string;
@@ -49,10 +49,10 @@ export declare class InstructorsService {
         }[];
         availabilitySlots: {
             id: string;
+            instructorProfileId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            instructorProfileId: string;
             weekday: number;
             startTime: string;
             endTime: string;
@@ -89,21 +89,21 @@ export declare class InstructorsService {
     findOne(id: string): Prisma.Prisma__InstructorProfileClient<({
         user: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.UserStatus;
             email: string;
             phone: string | null;
             passwordHash: string;
             role: import(".prisma/client").$Enums.UserRole;
-            status: import(".prisma/client").$Enums.UserStatus;
             refreshTokenHash: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
         reviews: {
             id: string;
-            createdAt: Date;
             instructorProfileId: string;
-            bookingId: string;
+            createdAt: Date;
             candidateProfileId: string;
+            bookingId: string;
             punctuality: number;
             didactics: number;
             professionalism: number;
@@ -119,26 +119,26 @@ export declare class InstructorsService {
                 state: string | null;
                 city: string | null;
                 verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+                cnpj: string;
+                managerUserId: string | null;
                 legalName: string;
                 tradeName: string;
-                cnpj: string;
                 address: string | null;
-                managerUserId: string | null;
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.LinkStatus;
-            createdAt: Date;
             instructorProfileId: string;
             schoolId: string;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.LinkStatus;
         })[];
         vehicles: {
             id: string;
+            instructorProfileId: string | null;
+            schoolId: string | null;
             createdAt: Date;
             updatedAt: Date;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-            instructorProfileId: string | null;
-            schoolId: string | null;
             plate: string;
             brand: string;
             model: string;
@@ -148,10 +148,10 @@ export declare class InstructorsService {
         }[];
         availabilitySlots: {
             id: string;
+            instructorProfileId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
-            instructorProfileId: string;
             weekday: number;
             startTime: string;
             endTime: string;
@@ -175,14 +175,14 @@ export declare class InstructorsService {
     listAll(): Prisma.PrismaPromise<({
         user: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.UserStatus;
             email: string;
             phone: string | null;
             passwordHash: string;
             role: import(".prisma/client").$Enums.UserRole;
-            status: import(".prisma/client").$Enums.UserStatus;
             refreshTokenHash: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;

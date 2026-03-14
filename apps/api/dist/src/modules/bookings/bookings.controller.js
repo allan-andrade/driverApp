@@ -18,6 +18,7 @@ const client_1 = require("@prisma/client");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const bookings_service_1 = require("./bookings.service");
+const cancel_booking_dto_1 = require("./dto/cancel-booking.dto");
 const create_booking_dto_1 = require("./dto/create-booking.dto");
 const reschedule_booking_dto_1 = require("./dto/reschedule-booking.dto");
 let BookingsController = class BookingsController {
@@ -37,14 +38,14 @@ let BookingsController = class BookingsController {
     list(candidateProfileId, instructorProfileId, schoolId) {
         return this.bookingsService.list({ candidateProfileId, instructorProfileId, schoolId });
     }
-    findOne(id) {
-        return this.bookingsService.findOne(id);
+    findOne(id, user) {
+        return this.bookingsService.findOne(id, user.userId, user.role);
     }
-    cancel(id, actorUserId) {
-        return this.bookingsService.cancel(id, actorUserId);
+    cancel(id, dto, user) {
+        return this.bookingsService.cancel(id, dto, user);
     }
-    reschedule(id, dto, actorUserId) {
-        return this.bookingsService.reschedule(id, dto, actorUserId);
+    reschedule(id, dto, user) {
+        return this.bookingsService.reschedule(id, dto, user);
     }
 };
 exports.BookingsController = BookingsController;
@@ -66,7 +67,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "listMine", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.UserRole.CANDIDATE, client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER, client_1.UserRole.ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('candidateProfileId')),
     __param(1, (0, common_1.Query)('instructorProfileId')),
@@ -79,17 +80,19 @@ __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.CANDIDATE, client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER, client_1.UserRole.ADMIN),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "findOne", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.CANDIDATE, client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER),
     (0, common_1.Patch)(':id/cancel'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, current_user_decorator_1.CurrentUser)('userId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, cancel_booking_dto_1.CancelBookingDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "cancel", null);
 __decorate([
@@ -97,9 +100,9 @@ __decorate([
     (0, common_1.Patch)(':id/reschedule'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)('userId')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, reschedule_booking_dto_1.RescheduleBookingDto, String]),
+    __metadata("design:paramtypes", [String, reschedule_booking_dto_1.RescheduleBookingDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "reschedule", null);
 exports.BookingsController = BookingsController = __decorate([

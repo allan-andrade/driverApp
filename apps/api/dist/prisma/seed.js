@@ -37,6 +37,10 @@ const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 async function main() {
+    await prisma.dispute.deleteMany();
+    await prisma.incidentReport.deleteMany();
+    await prisma.payout.deleteMany();
+    await prisma.documentSubmission.deleteMany();
     await prisma.review.deleteMany();
     await prisma.lesson.deleteMany();
     await prisma.payment.deleteMany();
@@ -197,21 +201,72 @@ async function main() {
             paymentStatus: client_1.PaymentStatus.PAID,
         },
     });
+    const upcomingLesson = await prisma.lesson.create({
+        data: {
+            bookingId: upcomingBooking.id,
+            candidateProfileId: candidateProfile.id,
+            instructorProfileId: instructorProfile.id,
+            pinCode: '1234',
+            pinVerified: false,
+            status: 'SCHEDULED',
+        },
+    });
+    const completedLesson = await prisma.lesson.create({
+        data: {
+            bookingId: completedBooking.id,
+            candidateProfileId: candidateProfile.id,
+            instructorProfileId: instructorProfile.id,
+            pinCode: '5678',
+            pinVerified: true,
+            status: 'COMPLETED',
+            startedAt: new Date(completedStart.getTime() + 5 * 60 * 1000),
+            finishedAt: completedEnd,
+            startLat: -23.561414,
+            startLng: -46.655881,
+            endLat: -23.56818,
+            endLng: -46.644312,
+        },
+    });
     await prisma.payment.createMany({
         data: [
             {
                 bookingId: upcomingBooking.id,
+                candidateProfileId: candidateProfile.id,
+                instructorProfileId: instructorProfile.id,
                 status: client_1.PaymentStatus.PENDING,
                 amount: 590,
+                platformFee: 70.8,
+                method: client_1.PaymentMethod.MANUAL,
+                currency: 'BRL',
                 provider: 'stub',
             },
             {
                 bookingId: completedBooking.id,
+                candidateProfileId: candidateProfile.id,
+                instructorProfileId: instructorProfile.id,
                 status: client_1.PaymentStatus.PAID,
                 amount: 390,
+                platformFee: 46.8,
+                method: client_1.PaymentMethod.CARD,
+                currency: 'BRL',
+                capturedAt: completedEnd,
                 provider: 'stub',
             },
         ],
+    });
+    const completedPayment = await prisma.payment.findFirstOrThrow({
+        where: { bookingId: completedBooking.id },
+    });
+    await prisma.payout.create({
+        data: {
+            paymentId: completedPayment.id,
+            instructorProfileId: instructorProfile.id,
+            amountNet: 343.2,
+            status: client_1.PayoutStatus.PAID,
+            scheduledAt: new Date(completedEnd.getTime() + 24 * 60 * 60 * 1000),
+            paidAt: new Date(completedEnd.getTime() + 48 * 60 * 60 * 1000),
+            provider: 'stub-bank',
+        },
     });
     await prisma.review.create({
         data: {
@@ -247,6 +302,38 @@ async function main() {
             managerUserId: managerUser.id,
         },
     });
+    const submission = await prisma.documentSubmission.create({
+        data: {
+            userId: candidateUser.id,
+            stateCode: 'SP',
+            documentType: 'CPF',
+            fileUrl: 'https://example.com/docs/cpf-candidato.pdf',
+            verificationStatus: client_1.VerificationStatus.PENDING,
+        },
+    });
+    await prisma.dispute.create({
+        data: {
+            bookingId: completedBooking.id,
+            lessonId: completedLesson.id,
+            paymentId: completedPayment.id,
+            openedByUserId: candidateUser.id,
+            reason: 'Cobrança indevida de taxa adicional',
+            description: 'Valor cobrado no recibo nao bate com o combinado no app.',
+            status: client_1.DisputeStatus.OPEN,
+        },
+    });
+    await prisma.incidentReport.create({
+        data: {
+            bookingId: upcomingBooking.id,
+            lessonId: upcomingLesson.id,
+            reporterUserId: instructorUser.id,
+            reportedUserId: candidateUser.id,
+            type: client_1.IncidentType.NO_SHOW,
+            severity: client_1.IncidentSeverity.MEDIUM,
+            description: 'Aluno nao compareceu ao ponto de encontro no horario combinado.',
+            status: client_1.IncidentStatus.OPEN,
+        },
+    });
     await prisma.statePolicy.createMany({
         data: [
             {
@@ -269,6 +356,15 @@ async function main() {
     });
     await prisma.auditLog.create({
         data: {
+            actorUserId: school.managerUserId,
+            entityType: 'DOCUMENT_SUBMISSION',
+            entityId: submission.id,
+            action: 'SEED_DOCUMENT_SUBMISSION_CREATED',
+            metadataJson: { source: 'seed' },
+        },
+    });
+    await prisma.auditLog.create({
+        data: {
             actorUserId: null,
             entityType: 'STATE_POLICY',
             entityId: 'SP',
@@ -276,7 +372,7 @@ async function main() {
             metadataJson: { source: 'seed' },
         },
     });
-    console.log('Seed phase 2 executed with success');
+    console.log('Seed phase 3 executed with success');
 }
 main()
     .catch(async (error) => {

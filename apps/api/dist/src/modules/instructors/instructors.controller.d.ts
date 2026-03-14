@@ -235,20 +235,20 @@ export declare class InstructorsController {
         updatedAt: Date;
     }>;
     listMyBookings(userId: string): Promise<({
-        instructorProfile: {
+        candidateProfile: {
             id: string;
+            fullName: string;
+        };
+        instructorProfile: {
             user: {
                 email: string;
             };
+            id: string;
         } | null;
         package: {
             id: string;
             title: string;
         } | null;
-        candidateProfile: {
-            id: string;
-            fullName: string;
-        };
     } & {
         id: string;
         instructorProfileId: string | null;
@@ -261,6 +261,8 @@ export declare class InstructorsController {
         scheduledEnd: Date;
         status: import(".prisma/client").$Enums.BookingStatus;
         paymentStatus: import(".prisma/client").$Enums.PaymentStatus;
+        cancelReason: string | null;
+        rescheduleReason: string | null;
         candidateProfileId: string;
         packageId: string | null;
     } & {
@@ -281,6 +283,17 @@ export declare class InstructorsController {
         score: number;
     }[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__InstructorProfileClient<({
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.UserStatus;
+            email: string;
+            phone: string | null;
+            passwordHash: string;
+            role: import(".prisma/client").$Enums.UserRole;
+            refreshTokenHash: string | null;
+        };
         reviews: {
             id: string;
             instructorProfileId: string;
@@ -294,17 +307,6 @@ export declare class InstructorsController {
             examReadiness: number;
             comment: string | null;
         }[];
-        user: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            status: import(".prisma/client").$Enums.UserStatus;
-            email: string;
-            phone: string | null;
-            passwordHash: string;
-            role: import(".prisma/client").$Enums.UserRole;
-            refreshTokenHash: string | null;
-        };
         schoolLinks: ({
             school: {
                 id: string;

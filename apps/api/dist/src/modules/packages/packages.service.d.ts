@@ -7,8 +7,6 @@ export declare class PackagesService {
     constructor(prisma: PrismaService);
     create(dto: CreatePackageDto): import(".prisma/client").Prisma.Prisma__PackageClient<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -17,11 +15,11 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     listByInstructor(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -30,11 +28,11 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     listBySchool(schoolId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -43,11 +41,11 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -56,12 +54,12 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     private getInstructorProfileIdByUserId;
     createMine(userId: string, dto: CreateMyPackageDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -70,11 +68,11 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     listMine(userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -83,11 +81,11 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     updateMine(userId: string, id: string, dto: UpdatePackageDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -96,11 +94,11 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     removeMine(userId: string, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
         title: string;
@@ -109,5 +107,7 @@ export declare class PackagesService {
         category: import(".prisma/client").$Enums.CnhCategory;
         price: import("@prisma/client/runtime/library").Decimal;
         usesInstructorVehicle: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

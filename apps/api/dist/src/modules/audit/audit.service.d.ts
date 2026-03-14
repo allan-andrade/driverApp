@@ -8,18 +8,18 @@ export declare class AuditService {
         id: string;
         createdAt: Date;
         entityType: import(".prisma/client").$Enums.EntityType;
-        metadataJson: Prisma.JsonValue | null;
         entityId: string;
         action: string;
+        metadataJson: Prisma.JsonValue | null;
         actorUserId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     list(entityType?: string, entityId?: string): Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
         entityType: import(".prisma/client").$Enums.EntityType;
-        metadataJson: Prisma.JsonValue | null;
         entityId: string;
         action: string;
+        metadataJson: Prisma.JsonValue | null;
         actorUserId: string | null;
     }[]>;
 }

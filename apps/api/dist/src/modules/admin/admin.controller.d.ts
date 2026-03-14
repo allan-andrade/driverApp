@@ -8,26 +8,26 @@ export declare class AdminController {
     constructor(usersService: UsersService, instructorsService: InstructorsService, schoolsService: SchoolsService);
     users(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.UserStatus;
         email: string;
         phone: string | null;
         passwordHash: string;
         role: import(".prisma/client").$Enums.UserRole;
-        status: import(".prisma/client").$Enums.UserStatus;
         refreshTokenHash: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     instructors(): import(".prisma/client").Prisma.PrismaPromise<({
         user: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.UserStatus;
             email: string;
             phone: string | null;
             passwordHash: string;
             role: import(".prisma/client").$Enums.UserRole;
-            status: import(".prisma/client").$Enums.UserStatus;
             refreshTokenHash: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
@@ -52,10 +52,10 @@ export declare class AdminController {
         state: string | null;
         city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        cnpj: string;
+        managerUserId: string | null;
         legalName: string;
         tradeName: string;
-        cnpj: string;
         address: string | null;
-        managerUserId: string | null;
     }[]>;
 }

@@ -11,20 +11,20 @@ export declare class SchoolsController {
         state: string | null;
         city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        cnpj: string;
+        managerUserId: string | null;
         legalName: string;
         tradeName: string;
-        cnpj: string;
         address: string | null;
-        managerUserId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     mySchool(userId: string): import(".prisma/client").Prisma.Prisma__SchoolClient<({
         vehicles: {
             id: string;
+            instructorProfileId: string | null;
+            schoolId: string | null;
             createdAt: Date;
             updatedAt: Date;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-            instructorProfileId: string | null;
-            schoolId: string | null;
             plate: string;
             brand: string;
             model: string;
@@ -51,10 +51,10 @@ export declare class SchoolsController {
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.LinkStatus;
-            createdAt: Date;
             instructorProfileId: string;
             schoolId: string;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.LinkStatus;
         })[];
     } & {
         id: string;
@@ -63,18 +63,18 @@ export declare class SchoolsController {
         state: string | null;
         city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        cnpj: string;
+        managerUserId: string | null;
         legalName: string;
         tradeName: string;
-        cnpj: string;
         address: string | null;
-        managerUserId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     linkInstructor(userId: string, dto: LinkInstructorDto): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.LinkStatus;
-        createdAt: Date;
         instructorProfileId: string;
         schoolId: string;
+        createdAt: Date;
+        status: import(".prisma/client").$Enums.LinkStatus;
     }>;
     list(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
@@ -83,10 +83,10 @@ export declare class SchoolsController {
         state: string | null;
         city: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        cnpj: string;
+        managerUserId: string | null;
         legalName: string;
         tradeName: string;
-        cnpj: string;
         address: string | null;
-        managerUserId: string | null;
     }[]>;
 }

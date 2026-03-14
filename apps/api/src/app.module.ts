@@ -19,13 +19,17 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { PayoutsModule } from './modules/payouts/payouts.module';
+import { DisputesModule } from './modules/disputes/disputes.module';
+import { IncidentsModule } from './modules/incidents/incidents.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
-import { PrismaService } from './prisma.service';
+import { PrismaModule } from './prisma.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
     AuthModule,
     UsersModule,
     CandidatesModule,
@@ -44,9 +48,11 @@ import { PrismaService } from './prisma.service';
     QueueModule,
     AdminModule,
     MarketplaceModule,
+    PayoutsModule,
+    DisputesModule,
+    IncidentsModule,
   ],
   providers: [
-    PrismaService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

@@ -7,18 +7,18 @@ export declare class AuditController {
         id: string;
         createdAt: Date;
         entityType: import(".prisma/client").$Enums.EntityType;
-        metadataJson: import("@prisma/client/runtime/library").JsonValue | null;
         entityId: string;
         action: string;
+        metadataJson: import("@prisma/client/runtime/library").JsonValue | null;
         actorUserId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     list(entityType?: string, entityId?: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
         entityType: import(".prisma/client").$Enums.EntityType;
-        metadataJson: import("@prisma/client/runtime/library").JsonValue | null;
         entityId: string;
         action: string;
+        metadataJson: import("@prisma/client/runtime/library").JsonValue | null;
         actorUserId: string | null;
     }[]>;
 }

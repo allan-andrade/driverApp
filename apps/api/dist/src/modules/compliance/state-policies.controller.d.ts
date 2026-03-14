@@ -7,21 +7,21 @@ export declare class StatePoliciesController {
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
+        notes: string | null;
         stateCode: string;
         rulesJson: import("@prisma/client/runtime/library").JsonValue;
         examFlowJson: import("@prisma/client/runtime/library").JsonValue;
         docsJson: import("@prisma/client/runtime/library").JsonValue;
-        notes: string | null;
     }[]>;
     findByState(stateCode: string): import(".prisma/client").Prisma.Prisma__StatePolicyClient<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
+        notes: string | null;
         stateCode: string;
         rulesJson: import("@prisma/client/runtime/library").JsonValue;
         examFlowJson: import("@prisma/client/runtime/library").JsonValue;
         docsJson: import("@prisma/client/runtime/library").JsonValue;
-        notes: string | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
 }

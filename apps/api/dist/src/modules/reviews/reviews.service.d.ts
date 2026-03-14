@@ -5,10 +5,10 @@ export declare class ReviewsService {
     constructor(prisma: PrismaService);
     create(dto: CreateReviewDto): import(".prisma/client").Prisma.Prisma__ReviewClient<{
         id: string;
-        createdAt: Date;
         instructorProfileId: string;
-        bookingId: string;
+        createdAt: Date;
         candidateProfileId: string;
+        bookingId: string;
         punctuality: number;
         didactics: number;
         professionalism: number;
@@ -18,10 +18,10 @@ export declare class ReviewsService {
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     listByInstructor(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
         instructorProfileId: string;
-        bookingId: string;
+        createdAt: Date;
         candidateProfileId: string;
+        bookingId: string;
         punctuality: number;
         didactics: number;
         professionalism: number;

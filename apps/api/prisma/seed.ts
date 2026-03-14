@@ -1,8 +1,14 @@
 import {
   BookingStatus,
   CnhCategory,
+  DisputeStatus,
+  IncidentStatus,
+  IncidentSeverity,
+  IncidentType,
   InstructorType,
+  PaymentMethod,
   PaymentStatus,
+  PayoutStatus,
   PrismaClient,
   UserRole,
   UserStatus,
@@ -13,6 +19,10 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.dispute.deleteMany();
+  await prisma.incidentReport.deleteMany();
+  await prisma.payout.deleteMany();
+  await prisma.documentSubmission.deleteMany();
   await prisma.review.deleteMany();
   await prisma.lesson.deleteMany();
   await prisma.payment.deleteMany();
@@ -188,21 +198,76 @@ async function main() {
     },
   });
 
+  const upcomingLesson = await prisma.lesson.create({
+    data: {
+      bookingId: upcomingBooking.id,
+      candidateProfileId: candidateProfile.id,
+      instructorProfileId: instructorProfile.id,
+      pinCode: '1234',
+      pinVerified: false,
+      status: 'SCHEDULED',
+    },
+  });
+
+  const completedLesson = await prisma.lesson.create({
+    data: {
+      bookingId: completedBooking.id,
+      candidateProfileId: candidateProfile.id,
+      instructorProfileId: instructorProfile.id,
+      pinCode: '5678',
+      pinVerified: true,
+      status: 'COMPLETED',
+      startedAt: new Date(completedStart.getTime() + 5 * 60 * 1000),
+      finishedAt: completedEnd,
+      startLat: -23.561414,
+      startLng: -46.655881,
+      endLat: -23.56818,
+      endLng: -46.644312,
+    },
+  });
+
   await prisma.payment.createMany({
     data: [
       {
         bookingId: upcomingBooking.id,
+        candidateProfileId: candidateProfile.id,
+        instructorProfileId: instructorProfile.id,
         status: PaymentStatus.PENDING,
         amount: 590,
+        platformFee: 70.8,
+        method: PaymentMethod.MANUAL,
+        currency: 'BRL',
         provider: 'stub',
       },
       {
         bookingId: completedBooking.id,
+        candidateProfileId: candidateProfile.id,
+        instructorProfileId: instructorProfile.id,
         status: PaymentStatus.PAID,
         amount: 390,
+        platformFee: 46.8,
+        method: PaymentMethod.CARD,
+        currency: 'BRL',
+        capturedAt: completedEnd,
         provider: 'stub',
       },
     ],
+  });
+
+  const completedPayment = await prisma.payment.findFirstOrThrow({
+    where: { bookingId: completedBooking.id },
+  });
+
+  await prisma.payout.create({
+    data: {
+      paymentId: completedPayment.id,
+      instructorProfileId: instructorProfile.id,
+      amountNet: 343.2,
+      status: PayoutStatus.PAID,
+      scheduledAt: new Date(completedEnd.getTime() + 24 * 60 * 60 * 1000),
+      paidAt: new Date(completedEnd.getTime() + 48 * 60 * 60 * 1000),
+      provider: 'stub-bank',
+    },
   });
 
   await prisma.review.create({
@@ -242,6 +307,41 @@ async function main() {
     },
   });
 
+  const submission = await prisma.documentSubmission.create({
+    data: {
+      userId: candidateUser.id,
+      stateCode: 'SP',
+      documentType: 'CPF',
+      fileUrl: 'https://example.com/docs/cpf-candidato.pdf',
+      verificationStatus: VerificationStatus.PENDING,
+    },
+  });
+
+  await prisma.dispute.create({
+    data: {
+      bookingId: completedBooking.id,
+      lessonId: completedLesson.id,
+      paymentId: completedPayment.id,
+      openedByUserId: candidateUser.id,
+      reason: 'Cobrança indevida de taxa adicional',
+      description: 'Valor cobrado no recibo nao bate com o combinado no app.',
+      status: DisputeStatus.OPEN,
+    },
+  });
+
+  await prisma.incidentReport.create({
+    data: {
+      bookingId: upcomingBooking.id,
+      lessonId: upcomingLesson.id,
+      reporterUserId: instructorUser.id,
+      reportedUserId: candidateUser.id,
+      type: IncidentType.NO_SHOW,
+      severity: IncidentSeverity.MEDIUM,
+      description: 'Aluno nao compareceu ao ponto de encontro no horario combinado.',
+      status: IncidentStatus.OPEN,
+    },
+  });
+
   await prisma.statePolicy.createMany({
     data: [
       {
@@ -265,6 +365,16 @@ async function main() {
 
   await prisma.auditLog.create({
     data: {
+      actorUserId: school.managerUserId,
+      entityType: 'DOCUMENT_SUBMISSION',
+      entityId: submission.id,
+      action: 'SEED_DOCUMENT_SUBMISSION_CREATED',
+      metadataJson: { source: 'seed' },
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
       actorUserId: null,
       entityType: 'STATE_POLICY',
       entityId: 'SP',
@@ -273,7 +383,7 @@ async function main() {
     },
   });
 
-  console.log('Seed phase 2 executed with success');
+  console.log('Seed phase 3 executed with success');
 }
 
 main()

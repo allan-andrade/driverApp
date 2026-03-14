@@ -17,6 +17,10 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const cancel_lesson_dto_1 = require("./dto/cancel-lesson.dto");
+const finish_lesson_dto_1 = require("./dto/finish-lesson.dto");
+const mark_no_show_dto_1 = require("./dto/mark-no-show.dto");
+const start_lesson_dto_1 = require("./dto/start-lesson.dto");
 const lessons_service_1 = require("./lessons.service");
 const verify_pin_dto_1 = require("./dto/verify-pin.dto");
 let LessonsController = class LessonsController {
@@ -27,14 +31,26 @@ let LessonsController = class LessonsController {
     list(instructorProfileId) {
         return this.lessonsService.listByInstructor(instructorProfileId);
     }
-    listMine(userId) {
-        return this.lessonsService.listMine(userId);
+    listMine(user) {
+        return this.lessonsService.listMine(user.userId, user.role);
     }
-    checkIn(id, dto) {
-        return this.lessonsService.checkIn(id, dto);
+    findOne(id, user) {
+        return this.lessonsService.findOne(id, user.userId, user.role);
     }
-    finish(id, body) {
-        return this.lessonsService.finish(id, body.endLat, body.endLng);
+    checkIn(id, dto, actor) {
+        return this.lessonsService.checkIn(id, dto, actor);
+    }
+    start(id, dto, actor) {
+        return this.lessonsService.start(id, dto, actor);
+    }
+    finish(id, dto, actor) {
+        return this.lessonsService.finish(id, dto, actor);
+    }
+    markNoShow(id, dto, actor) {
+        return this.lessonsService.markNoShow(id, dto.reason, actor);
+    }
+    cancel(id, dto, actor) {
+        return this.lessonsService.cancel(id, dto.reason, actor);
     }
 };
 exports.LessonsController = LessonsController;
@@ -47,31 +63,72 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], LessonsController.prototype, "list", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.UserRole.INSTRUCTOR),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.CANDIDATE, client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER, client_1.UserRole.ADMIN),
     (0, common_1.Get)('me'),
-    __param(0, (0, current_user_decorator_1.CurrentUser)('userId')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], LessonsController.prototype, "listMine", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.UserRole.CANDIDATE, client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER, client_1.UserRole.ADMIN),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], LessonsController.prototype, "findOne", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.INSTRUCTOR),
     (0, common_1.Patch)(':id/check-in'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, verify_pin_dto_1.VerifyPinDto]),
+    __metadata("design:paramtypes", [String, verify_pin_dto_1.VerifyPinDto, Object]),
     __metadata("design:returntype", void 0)
 ], LessonsController.prototype, "checkIn", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.UserRole.INSTRUCTOR),
+    (0, common_1.Patch)(':id/start'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, start_lesson_dto_1.StartLessonDto, Object]),
+    __metadata("design:returntype", void 0)
+], LessonsController.prototype, "start", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.UserRole.INSTRUCTOR),
     (0, common_1.Patch)(':id/finish'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, finish_lesson_dto_1.FinishLessonDto, Object]),
     __metadata("design:returntype", void 0)
 ], LessonsController.prototype, "finish", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER, client_1.UserRole.ADMIN),
+    (0, common_1.Patch)(':id/no-show'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, mark_no_show_dto_1.MarkNoShowDto, Object]),
+    __metadata("design:returntype", void 0)
+], LessonsController.prototype, "markNoShow", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.UserRole.INSTRUCTOR, client_1.UserRole.SCHOOL_MANAGER, client_1.UserRole.ADMIN),
+    (0, common_1.Patch)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, cancel_lesson_dto_1.CancelLessonDto, Object]),
+    __metadata("design:returntype", void 0)
+], LessonsController.prototype, "cancel", null);
 exports.LessonsController = LessonsController = __decorate([
     (0, common_1.Controller)('lessons'),
     __metadata("design:paramtypes", [lessons_service_1.LessonsService])

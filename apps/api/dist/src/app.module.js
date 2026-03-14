@@ -28,9 +28,12 @@ const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const queue_module_1 = require("./modules/queue/queue.module");
 const admin_module_1 = require("./modules/admin/admin.module");
 const marketplace_module_1 = require("./modules/marketplace/marketplace.module");
+const payouts_module_1 = require("./modules/payouts/payouts.module");
+const disputes_module_1 = require("./modules/disputes/disputes.module");
+const incidents_module_1 = require("./modules/incidents/incidents.module");
 const jwt_auth_guard_1 = require("./common/guards/jwt-auth.guard");
 const roles_guard_1 = require("./common/guards/roles.guard");
-const prisma_service_1 = require("./prisma.service");
+const prisma_module_1 = require("./prisma.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -38,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
+            prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             candidates_module_1.CandidatesModule,
@@ -56,9 +60,11 @@ exports.AppModule = AppModule = __decorate([
             queue_module_1.QueueModule,
             admin_module_1.AdminModule,
             marketplace_module_1.MarketplaceModule,
+            payouts_module_1.PayoutsModule,
+            disputes_module_1.DisputesModule,
+            incidents_module_1.IncidentsModule,
         ],
         providers: [
-            prisma_service_1.PrismaService,
             { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_1.JwtAuthGuard },
             { provide: core_1.APP_GUARD, useClass: roles_guard_1.RolesGuard },
         ],

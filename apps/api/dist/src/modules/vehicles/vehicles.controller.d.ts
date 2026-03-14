@@ -5,11 +5,11 @@ export declare class VehiclesController {
     constructor(vehiclesService: VehiclesService);
     create(dto: CreateVehicleDto): import(".prisma/client").Prisma.Prisma__VehicleClient<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -19,11 +19,11 @@ export declare class VehiclesController {
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     list(instructorProfileId?: string, schoolId?: string): never[] | import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;

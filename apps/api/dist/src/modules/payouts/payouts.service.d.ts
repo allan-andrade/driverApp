@@ -1,0 +1,147 @@
+import { PayoutStatus, Prisma } from '@prisma/client';
+import { PrismaService } from '../../prisma.service';
+export declare class PayoutsService {
+    private readonly prisma;
+    constructor(prisma: PrismaService);
+    createHoldForPayment(paymentId: string): Promise<{
+        id: string;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayoutStatus;
+        providerReference: string | null;
+        provider: string | null;
+        paymentId: string;
+        amountNet: Prisma.Decimal;
+        scheduledAt: Date | null;
+        paidAt: Date | null;
+    } | null>;
+    releaseByBooking(bookingId: string): Promise<{
+        id: string;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayoutStatus;
+        providerReference: string | null;
+        provider: string | null;
+        paymentId: string;
+        amountNet: Prisma.Decimal;
+        scheduledAt: Date | null;
+        paidAt: Date | null;
+    } | null>;
+    listAll(): Prisma.PrismaPromise<({
+        instructorProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            state: string | null;
+            city: string | null;
+            instructorType: import(".prisma/client").$Enums.InstructorType;
+            verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+            bio: string | null;
+            yearsExperience: number | null;
+            serviceRadiusKm: number | null;
+            basePrice: Prisma.Decimal | null;
+            isActive: boolean;
+            categories: import(".prisma/client").$Enums.CnhCategory[];
+        } | null;
+        school: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            state: string | null;
+            city: string | null;
+            verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+            cnpj: string;
+            managerUserId: string | null;
+            legalName: string;
+            tradeName: string;
+            address: string | null;
+        } | null;
+        payment: {
+            id: string;
+            instructorProfileId: string | null;
+            schoolId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            platformFee: Prisma.Decimal;
+            candidateProfileId: string;
+            status: import(".prisma/client").$Enums.PaymentStatus;
+            bookingId: string;
+            providerReference: string | null;
+            amount: Prisma.Decimal;
+            currency: string;
+            method: import(".prisma/client").$Enums.PaymentMethod;
+            capturedAt: Date | null;
+            refundedAt: Date | null;
+            provider: string | null;
+            providerPaymentId: string | null;
+            splitMetadataJson: Prisma.JsonValue | null;
+        };
+    } & {
+        id: string;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayoutStatus;
+        providerReference: string | null;
+        provider: string | null;
+        paymentId: string;
+        amountNet: Prisma.Decimal;
+        scheduledAt: Date | null;
+        paidAt: Date | null;
+    })[]>;
+    listMine(userId: string): Promise<({
+        payment: {
+            id: string;
+            instructorProfileId: string | null;
+            schoolId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            platformFee: Prisma.Decimal;
+            candidateProfileId: string;
+            status: import(".prisma/client").$Enums.PaymentStatus;
+            bookingId: string;
+            providerReference: string | null;
+            amount: Prisma.Decimal;
+            currency: string;
+            method: import(".prisma/client").$Enums.PaymentMethod;
+            capturedAt: Date | null;
+            refundedAt: Date | null;
+            provider: string | null;
+            providerPaymentId: string | null;
+            splitMetadataJson: Prisma.JsonValue | null;
+        };
+    } & {
+        id: string;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayoutStatus;
+        providerReference: string | null;
+        provider: string | null;
+        paymentId: string;
+        amountNet: Prisma.Decimal;
+        scheduledAt: Date | null;
+        paidAt: Date | null;
+    })[]>;
+    updateStatus(id: string, status: PayoutStatus, provider?: string, providerReference?: string): Promise<{
+        id: string;
+        instructorProfileId: string | null;
+        schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayoutStatus;
+        providerReference: string | null;
+        provider: string | null;
+        paymentId: string;
+        amountNet: Prisma.Decimal;
+        scheduledAt: Date | null;
+        paidAt: Date | null;
+    }>;
+}

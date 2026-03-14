@@ -6,11 +6,11 @@ export declare class VehiclesService {
     constructor(prisma: PrismaService);
     create(dto: CreateVehicleDto): import(".prisma/client").Prisma.Prisma__VehicleClient<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -20,11 +20,11 @@ export declare class VehiclesService {
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     listByInstructor(instructorProfileId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -34,11 +34,11 @@ export declare class VehiclesService {
     }[]>;
     listBySchool(schoolId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -49,11 +49,11 @@ export declare class VehiclesService {
     private getInstructorProfileIdByUserId;
     createForInstructor(userId: string, dto: CreateVehicleDto): Promise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -63,11 +63,11 @@ export declare class VehiclesService {
     }>;
     listMine(userId: string): Promise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -77,11 +77,11 @@ export declare class VehiclesService {
     }[]>;
     updateMine(userId: string, id: string, dto: UpdateVehicleDto): Promise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;
@@ -91,11 +91,11 @@ export declare class VehiclesService {
     }>;
     removeMine(userId: string, id: string): Promise<{
         id: string;
-        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         instructorProfileId: string | null;
         schoolId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         plate: string;
         brand: string;
         model: string;

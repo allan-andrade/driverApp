@@ -8,8 +8,8 @@ export declare class CandidatesService {
         createdAt: Date;
         updatedAt: Date;
         userId: string;
-        fullName: string;
         cpf: string | null;
+        fullName: string;
         birthDate: Date | null;
         state: string | null;
         city: string | null;
@@ -24,8 +24,8 @@ export declare class CandidatesService {
         createdAt: Date;
         updatedAt: Date;
         userId: string;
-        fullName: string;
         cpf: string | null;
+        fullName: string;
         birthDate: Date | null;
         state: string | null;
         city: string | null;
@@ -40,8 +40,8 @@ export declare class CandidatesService {
         createdAt: Date;
         updatedAt: Date;
         userId: string;
-        fullName: string;
         cpf: string | null;
+        fullName: string;
         birthDate: Date | null;
         state: string | null;
         city: string | null;
