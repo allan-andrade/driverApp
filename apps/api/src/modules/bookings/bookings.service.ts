@@ -1,8 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { BookingStatus, EntityType, LessonStatus, PaymentStatus, Prisma, UserRole } from '@prisma/client';
+import { BookingStatus, EntityType, LessonStatus, NotificationType, PaymentStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { MetricsService } from '../metrics/metrics.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PackagesService } from '../packages/packages.service';
+import { RemindersService } from '../reminders/reminders.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
@@ -13,6 +16,9 @@ export class BookingsService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly packagesService: PackagesService,
+    private readonly notificationsService: NotificationsService,
+    private readonly metricsService: MetricsService,
+    private readonly remindersService: RemindersService,
   ) {}
 
   private toMinutes(time: string) {
@@ -229,6 +235,20 @@ export class BookingsService {
       },
     });
 
+    await this.notificationsService.notifyBookingParticipants(
+      booking.id,
+      NotificationType.BOOKING_CREATED,
+      'Reserva criada',
+      'Uma nova reserva foi criada e aguarda operacao da aula.',
+      actorUserId,
+    );
+
+    if (booking.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(booking.instructorProfileId, actorUserId, 'BOOKING_CREATED');
+    }
+
+    await this.remindersService.queueBookingReminder(booking.id, actorUserId);
+
     return this.normalizeBooking(booking);
   }
 
@@ -369,6 +389,18 @@ export class BookingsService {
       },
     });
 
+    await this.notificationsService.notifyBookingParticipants(
+      id,
+      NotificationType.BOOKING_CANCELLED,
+      'Reserva cancelada',
+      'Uma reserva foi cancelada. Verifique os detalhes no painel.',
+      actorUser?.userId,
+    );
+
+    if (booking.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(booking.instructorProfileId, actorUser?.userId, 'BOOKING_CANCELLED');
+    }
+
     return this.normalizeBooking(cancelled);
   }
 
@@ -428,6 +460,18 @@ export class BookingsService {
       },
     });
 
+    await this.notificationsService.notifyBookingParticipants(
+      id,
+      NotificationType.BOOKING_RESCHEDULED,
+      'Reserva remarcada',
+      'A reserva foi remarcada para um novo horario.',
+      actorUser?.userId,
+    );
+
+    if (booking.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(booking.instructorProfileId, actorUser?.userId, 'BOOKING_RESCHEDULED');
+    }
+
     return this.normalizeBooking(updated);
   }
 
@@ -461,6 +505,17 @@ export class BookingsService {
               },
             },
           },
+        },
+        payments: {
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            method: true,
+            provider: true,
+            providerReference: true,
+          },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });

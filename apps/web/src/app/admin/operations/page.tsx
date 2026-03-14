@@ -7,7 +7,7 @@ const nav = [
   { href: '/admin/instructors', label: 'Instrutores' },
   { href: '/admin/schools', label: 'Autoescolas' },
   { href: '/admin/state-policies', label: 'State policies' },
-  { href: '/admin/operations', label: 'Operacoes Fase 3' },
+  { href: '/admin/operations', label: 'Operacoes Fase 5' },
 ];
 
 export default function AdminOperationsPage() {

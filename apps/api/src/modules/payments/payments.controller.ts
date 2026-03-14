@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Post } from '@nestjs/common';
 import { PaymentStatus, UserRole } from '@prisma/client';
+import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CreatePaymentCheckoutDto } from './dto/create-payment-checkout.dto';
 import { PaymentsService } from './payments.service';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
 
@@ -41,5 +43,25 @@ export class PaymentsController {
     }
 
     return this.paymentsService.updateStatus(id, dto.status, actorUserId, dto.providerReference);
+  }
+
+  @Roles(UserRole.CANDIDATE, UserRole.ADMIN)
+  @Post(':id/checkout')
+  checkout(
+    @Param('id') id: string,
+    @Body() dto: CreatePaymentCheckoutDto,
+    @CurrentUser('userId') actorUserId: string,
+  ) {
+    return this.paymentsService.startCheckout(id, dto, actorUserId);
+  }
+
+  @Public()
+  @Post('webhooks/:provider')
+  webhook(
+    @Param('provider') provider: string,
+    @Body() payload: Record<string, unknown>,
+    @Headers() headers: Record<string, string | string[] | undefined>,
+  ) {
+    return this.paymentsService.processWebhook(provider, payload, headers);
   }
 }

@@ -36,4 +36,10 @@ export class MarketplaceController {
   packages(@Param('id') id: string) {
     return this.marketplaceService.getInstructorPackages(id);
   }
+
+  @Public()
+  @Get(':id/metrics')
+  metrics(@Param('id') id: string) {
+    return this.marketplaceService.getInstructorMetrics(id);
+  }
 }

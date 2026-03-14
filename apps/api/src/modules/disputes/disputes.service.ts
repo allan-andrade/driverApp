@@ -1,7 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { DisputeStatus, EntityType, UserRole } from '@prisma/client';
+import { DisputeStatus, EntityType, NotificationType, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { MetricsService } from '../metrics/metrics.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { WalletsService } from '../wallets/wallets.service';
 import { CreateDisputeDto } from './dto/create-dispute.dto';
 
 @Injectable()
@@ -9,6 +12,9 @@ export class DisputesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
+    private readonly metricsService: MetricsService,
+    private readonly walletsService: WalletsService,
   ) {}
 
   private async assertActorScope(
@@ -113,6 +119,22 @@ export class DisputesService {
       },
     });
 
+    if (dispute.paymentId) {
+      await this.walletsService.holdByPayment(dispute.paymentId, 'Dispute opened', user.userId);
+    }
+
+    if (booking.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(booking.instructorProfileId, user.userId, 'DISPUTE_CREATED');
+    }
+
+    await this.notificationsService.notifyBookingParticipants(
+      resolvedBookingId,
+      NotificationType.DISPUTE_UPDATED,
+      'Disputa aberta',
+      'Uma disputa foi aberta para esta reserva.',
+      user.userId,
+    );
+
     return dispute;
   }
 
@@ -154,6 +176,9 @@ export class DisputesService {
         status,
         resolution,
       },
+      include: {
+        booking: { select: { id: true, instructorProfileId: true } },
+      },
     });
 
     await this.auditService.log({
@@ -166,6 +191,20 @@ export class DisputesService {
         resolution,
       },
     });
+
+    if (dispute.booking?.id) {
+      await this.notificationsService.notifyBookingParticipants(
+        dispute.booking.id,
+        NotificationType.DISPUTE_UPDATED,
+        'Disputa atualizada',
+        `Status da disputa atualizado para ${status}.`,
+        actorUserId,
+      );
+    }
+
+    if (dispute.booking?.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(dispute.booking.instructorProfileId, actorUserId, 'DISPUTE_UPDATED');
+    }
 
     return dispute;
   }

@@ -1,11 +1,11 @@
-import { VerificationStatus } from '@prisma/client';
+import { DocumentReviewDecision } from '@prisma/client';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class ReviewDocumentSubmissionDto {
-  @IsEnum(VerificationStatus)
-  verificationStatus!: VerificationStatus;
+  @IsEnum(DocumentReviewDecision)
+  decision!: DocumentReviewDecision;
 
   @IsOptional()
   @IsString()
-  notes?: string;
+  reason?: string;
 }

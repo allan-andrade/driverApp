@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { clientApiRequest } from '@/lib/client-api';
 
@@ -33,6 +34,14 @@ type BookingDetail = {
     pinCode?: string;
     startedAt?: string | null;
     finishedAt?: string | null;
+  }>;
+  payments: Array<{
+    id: string;
+    status: string;
+    amount: number;
+    method: string;
+    provider: string;
+    providerReference: string | null;
   }>;
 };
 
@@ -78,6 +87,38 @@ export function CandidateBookingDetails({ bookingId }: { bookingId: string }) {
             <p className="text-xs text-slate-500">Taxa plataforma</p>
             <p className="text-lg font-semibold">R$ {Number(data.platformFee).toFixed(2)}</p>
           </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href={`/candidate/chat/${data.id}`}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+          >
+            Abrir chat da reserva
+          </Link>
+          {data.payments[0] && (
+            <Link
+              href={`/candidate/checkout/${data.payments[0].id}`}
+              className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Ir para checkout
+            </Link>
+          )}
+        </div>
+      </article>
+
+      <article className="panel">
+        <h3 className="text-lg font-semibold">Pagamentos da reserva</h3>
+        <div className="mt-3 space-y-2">
+          {data.payments.map((payment) => (
+            <div key={payment.id} className="rounded-xl border border-slate-200 p-3 text-sm">
+              <p className="font-medium text-slate-800">{payment.provider.toUpperCase()} · {payment.method}</p>
+              <p className="text-slate-600">Status: {payment.status}</p>
+              <p className="text-slate-600">Valor: R$ {Number(payment.amount).toFixed(2)}</p>
+              <p className="text-slate-500">Ref: {payment.providerReference ?? 'Pendente'}</p>
+            </div>
+          ))}
+          {data.payments.length === 0 && <p className="text-sm text-slate-500">Ainda nao ha pagamentos vinculados.</p>}
         </div>
       </article>
 

@@ -3,6 +3,8 @@ import { CandidateDashboardSummary } from '@/components/candidate-dashboard-summ
 
 const nav = [
   { href: '/candidate/dashboard', label: 'Dashboard' },
+  { href: '/candidate/notifications', label: 'Notificacoes' },
+  { href: '/candidate/preferences', label: 'Preferencias' },
   { href: '/candidate/profile', label: 'Perfil' },
   { href: '/candidate/bookings', label: 'Minhas reservas' },
   { href: '/candidate/bookings/new', label: 'Nova reserva' },

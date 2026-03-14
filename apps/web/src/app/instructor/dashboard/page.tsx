@@ -3,6 +3,9 @@ import { InstructorDashboardSummary } from '@/components/instructor-dashboard-su
 
 const nav = [
   { href: '/instructor/dashboard', label: 'Dashboard' },
+  { href: '/instructor/notifications', label: 'Notificacoes' },
+  { href: '/instructor/wallet', label: 'Wallet' },
+  { href: '/instructor/compliance', label: 'Documentos' },
   { href: '/instructor/profile', label: 'Meu perfil' },
   { href: '/instructor/vehicles', label: 'Veiculos' },
   { href: '/instructor/agenda', label: 'Agenda' },

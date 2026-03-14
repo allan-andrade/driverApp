@@ -1,6 +1,9 @@
+import { InstructorMetricsPanel } from '@/components/instructor-metrics-panel';
+import { TeachingScoreBadge } from '@/components/teaching-score-badge';
 import { TopNav } from '@/components/top-nav';
+import { TrustScoreBadge } from '@/components/trust-score-badge';
 import { apiRequest } from '@/lib/api';
-import { MarketplaceInstructorDetail, MarketplaceReview } from '@driver-school/types';
+import { InstructorMetrics, MarketplaceInstructorDetail, MarketplaceReview } from '@driver-school/types';
 
 const weekdayLabel: Record<number, string> = {
   0: 'Domingo',
@@ -13,9 +16,10 @@ const weekdayLabel: Record<number, string> = {
 };
 
 export default async function InstructorDetailsPage({ params }: { params: { id: string } }) {
-  const [instructor, reviews] = await Promise.all([
+  const [instructor, reviews, metrics] = await Promise.all([
     apiRequest<MarketplaceInstructorDetail>(`/marketplace/instructors/${params.id}`),
     apiRequest<MarketplaceReview[]>(`/marketplace/instructors/${params.id}/reviews`),
+    apiRequest<InstructorMetrics>(`/marketplace/instructors/${params.id}/metrics`),
   ]);
 
   return (
@@ -35,6 +39,11 @@ export default async function InstructorDetailsPage({ params }: { params: { id: 
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                   {instructor.verificationStatus}
                 </span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <TrustScoreBadge score={instructor.trustScore} />
+                <TeachingScoreBadge score={instructor.teachingScore} />
               </div>
 
               <p className="mt-5 text-slate-600">{instructor.bio ?? 'Perfil em configuracao.'}</p>
@@ -68,6 +77,8 @@ export default async function InstructorDetailsPage({ params }: { params: { id: 
                 ))}
               </div>
             </div>
+
+            <InstructorMetricsPanel metrics={metrics} />
 
             <div className="panel">
               <h2 className="text-lg font-semibold">Pacotes de aulas</h2>

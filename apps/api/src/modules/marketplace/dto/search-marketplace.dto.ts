@@ -45,8 +45,36 @@ export class SearchMarketplaceDto {
   transmissionType?: TransmissionType;
 
   @IsOptional()
-  @IsIn(['relevance', 'price', 'rating', 'experience'])
-  sortBy?: 'relevance' | 'price' | 'rating' | 'experience';
+  @IsIn(['true', 'false'])
+  verifiedOnly?: 'true' | 'false';
+
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  hasAvailability?: 'true' | 'false';
+
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  usesInstructorVehicle?: 'true' | 'false';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minScore?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  minReviews?: number;
+
+  @IsOptional()
+  @IsString()
+  candidateProfileId?: string;
+
+  @IsOptional()
+  @IsIn(['relevance', 'price_asc', 'price_desc', 'rating', 'trust', 'teaching'])
+  sortBy?: 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'trust' | 'teaching';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])

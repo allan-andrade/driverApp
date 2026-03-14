@@ -100,6 +100,114 @@ enum PayoutStatus {
   ON_HOLD
 }
 
+enum WalletOwnerType {
+  USER
+  INSTRUCTOR
+  SCHOOL
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  HOLD
+  RELEASE
+  REFUND
+  PAYOUT
+}
+
+enum NotificationType {
+  BOOKING_CREATED
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+  LESSON_REMINDER
+  LESSON_STARTED
+  LESSON_COMPLETED
+  PAYMENT_UPDATED
+  PAYOUT_UPDATED
+  DOCUMENT_REVIEWED
+  INCIDENT_UPDATED
+  DISPUTE_UPDATED
+  SYSTEM
+}
+
+enum DocumentReviewDecision {
+  APPROVED
+  REJECTED
+  REQUEST_CHANGES
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum PaymentSplitStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  ON_HOLD
+}
+
+enum RecipientType {
+  PLATFORM
+  INSTRUCTOR
+  SCHOOL
+}
+
+enum ChatMessageType {
+  TEXT
+  SYSTEM
+  BOOKING_UPDATE
+}
+
+enum LessonLocationEventType {
+  CHECK_IN
+  START
+  FINISH
+  MANUAL_MARK
+}
+
+enum ReminderType {
+  BOOKING_REMINDER
+  LESSON_REMINDER
+  PAYMENT_CONFIRMATION
+  DOCUMENT_REMINDER
+}
+
+enum ReminderChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum FraudSignalType {
+  MULTIPLE_CANCELS
+  HIGH_RISK_PAYMENT
+  DEVICE_MISMATCH
+  GEO_MISMATCH
+  DUPLICATE_ACCOUNT
+  ABNORMAL_BOOKING_PATTERN
+  OTHER
+}
+
+enum FraudSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum WebhookProvider {
+  STRIPE
+  PAGARME
+  ASAAS
+}
+
 enum DisputeStatus {
   OPEN
   UNDER_REVIEW
@@ -146,6 +254,21 @@ enum EntityType {
   STATE_POLICY
   DOCUMENT_REQUIREMENT
   DOCUMENT_SUBMISSION
+  INSTRUCTOR_METRICS
+  WALLET
+  WALLET_TRANSACTION
+  NOTIFICATION
+  NOTIFICATION_PREFERENCE
+  DOCUMENT_REVIEW
+  MATCHING_SNAPSHOT
+  PAYMENT_ATTEMPT
+  PAYMENT_SPLIT
+  CHAT_CONVERSATION
+  CHAT_MESSAGE
+  LESSON_LOCATION_EVENT
+  REMINDER_JOB_LOG
+  FRAUD_SIGNAL
+  WEBHOOK_EVENT
 }
 
 model User {
@@ -167,6 +290,13 @@ model User {
   incidentReported   IncidentReport[]     @relation("IncidentReportedUser")
   documentSubmissions DocumentSubmission[] @relation("DocumentSubmissionUser")
   reviewedSubmissions DocumentSubmission[] @relation("DocumentSubmissionReviewer")
+  notifications      Notification[]
+  notificationPreference NotificationPreference?
+  documentReviews    DocumentReview[]     @relation("DocumentReviewReviewer")
+  wallets            Wallet[]             @relation("WalletOwner")
+  chatMessages       ChatMessage[]        @relation("ChatMessageSender")
+  reminderLogs       ReminderJobLog[]
+  fraudSignals       FraudSignal[]
 
   @@index([role])
   @@index([status])
@@ -192,6 +322,8 @@ model CandidateProfile {
   lessons                   Lesson[]
   reviews                   Review[]
   payments                  Payment[]
+  matchingSnapshots         MatchingSnapshot[]
+  chatConversations         ChatConversation[]
 
   @@index([state, city])
 }
@@ -222,6 +354,10 @@ model InstructorProfile {
   payments           Payment[]
   payouts            Payout[]
   documentSubmissions DocumentSubmission[]
+  metrics            InstructorMetrics?
+  wallet             Wallet?
+  matchingSnapshots  MatchingSnapshot[]
+  chatConversations  ChatConversation[]
 
   @@index([verificationStatus, isActive])
   @@index([city, state])
@@ -247,6 +383,8 @@ model School {
   payments           Payment[]
   payouts            Payout[]
   documentSubmissions DocumentSubmission[]
+  wallet             Wallet?
+  chatConversations  ChatConversation[]
 
   @@index([state, city])
 }
@@ -335,6 +473,9 @@ model Booking {
   payments            Payment[]
   disputes            Dispute[]
   incidentReports     IncidentReport[]
+  chatConversations   ChatConversation[]
+  reminderLogs        ReminderJobLog[]
+  fraudSignals        FraudSignal[]
 }
 
 model Lesson {
@@ -363,6 +504,9 @@ model Lesson {
   vehicle             Vehicle?          @relation(fields: [vehicleId], references: [id])
   disputes            Dispute[]
   incidentReports     IncidentReport[]
+  locationEvents      LessonLocationEvent[]
+  reminderLogs        ReminderJobLog[]
+  fraudSignals        FraudSignal[]
 }
 
 model Review {
@@ -447,6 +591,9 @@ model Payment {
   school             School?       @relation(fields: [schoolId], references: [id])
   payouts            Payout[]
   disputes           Dispute[]
+  attempts           PaymentAttempt[]
+  splits             PaymentSplit[]
+  fraudSignals       FraudSignal[]
 }
 
 model Payout {
@@ -522,4 +669,264 @@ model DocumentSubmission {
   instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
   school              School?            @relation(fields: [schoolId], references: [id])
   reviewedByUser      User?              @relation("DocumentSubmissionReviewer", fields: [reviewedByUserId], references: [id])
+  reviews             DocumentReview[]
+}
+
+model InstructorMetrics {
+  id                  String            @id @default(cuid())
+  instructorProfileId String            @unique
+  averageRating       Decimal           @default(0) @db.Decimal(5, 2)
+  punctualityAvg      Decimal           @default(0) @db.Decimal(5, 2)
+  didacticsAvg        Decimal           @default(0) @db.Decimal(5, 2)
+  professionalismAvg  Decimal           @default(0) @db.Decimal(5, 2)
+  safetyAvg           Decimal           @default(0) @db.Decimal(5, 2)
+  examReadinessAvg    Decimal           @default(0) @db.Decimal(5, 2)
+  totalReviews        Int               @default(0)
+  completedLessons    Int               @default(0)
+  cancelledBookings   Int               @default(0)
+  noShowCount         Int               @default(0)
+  attendanceRate      Decimal           @default(0) @db.Decimal(5, 2)
+  completionRate      Decimal           @default(0) @db.Decimal(5, 2)
+  trustScore          Decimal           @default(0) @db.Decimal(5, 2)
+  teachingScore       Decimal           @default(0) @db.Decimal(5, 2)
+  marketplaceScore    Decimal           @default(0) @db.Decimal(5, 2)
+  updatedAt           DateTime          @updatedAt
+  instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
+}
+
+model Wallet {
+  id                  String              @id @default(cuid())
+  ownerType           WalletOwnerType
+  ownerUserId         String?
+  instructorProfileId String?             @unique
+  schoolId            String?             @unique
+  currency            String              @default("BRL")
+  balanceAvailable    Decimal             @default(0) @db.Decimal(12, 2)
+  balancePending      Decimal             @default(0) @db.Decimal(12, 2)
+  balanceOnHold       Decimal             @default(0) @db.Decimal(12, 2)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  transactions        WalletTransaction[]
+  instructorProfile   InstructorProfile?  @relation(fields: [instructorProfileId], references: [id])
+  school              School?             @relation(fields: [schoolId], references: [id])
+  ownerUser           User?               @relation("WalletOwner", fields: [ownerUserId], references: [id])
+
+  @@unique([ownerType, ownerUserId])
+}
+
+model WalletTransaction {
+  id            String                @id @default(cuid())
+  walletId      String
+  type          WalletTransactionType
+  amount        Decimal               @db.Decimal(12, 2)
+  currency      String                @default("BRL")
+  referenceType EntityType
+  referenceId   String
+  description   String?
+  createdAt     DateTime              @default(now())
+  wallet        Wallet                @relation(fields: [walletId], references: [id])
+
+  @@index([walletId, createdAt])
+  @@index([referenceType, referenceId])
+}
+
+model Notification {
+  id          String            @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  payloadJson Json?
+  readAt      DateTime?
+  createdAt   DateTime          @default(now())
+  user        User              @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+model NotificationPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  emailEnabled    Boolean  @default(false)
+  pushEnabled     Boolean  @default(false)
+  inAppEnabled    Boolean  @default(true)
+  smsEnabled      Boolean  @default(false)
+  bookingUpdates  Boolean  @default(true)
+  lessonUpdates   Boolean  @default(true)
+  paymentUpdates  Boolean  @default(true)
+  safetyAlerts    Boolean  @default(true)
+  marketingEnabled Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model DocumentReview {
+  id                   String                 @id @default(cuid())
+  documentSubmissionId String
+  reviewedByUserId     String
+  decision             DocumentReviewDecision
+  reason               String?
+  metadataJson         Json?
+  createdAt            DateTime               @default(now())
+  documentSubmission   DocumentSubmission     @relation(fields: [documentSubmissionId], references: [id])
+  reviewedByUser       User                   @relation("DocumentReviewReviewer", fields: [reviewedByUserId], references: [id])
+
+  @@index([documentSubmissionId, createdAt])
+}
+
+model MatchingSnapshot {
+  id                  String            @id @default(cuid())
+  candidateProfileId  String?
+  instructorProfileId String
+  score               Decimal           @db.Decimal(5, 2)
+  factorsJson         Json
+  createdAt           DateTime          @default(now())
+  candidateProfile    CandidateProfile? @relation(fields: [candidateProfileId], references: [id])
+  instructorProfile   InstructorProfile @relation(fields: [instructorProfileId], references: [id])
+
+  @@index([candidateProfileId, createdAt])
+  @@index([instructorProfileId, createdAt])
+}
+
+model PaymentAttempt {
+  id                String               @id @default(cuid())
+  paymentId         String
+  provider          WebhookProvider
+  providerReference String?
+  status            PaymentAttemptStatus @default(PENDING)
+  requestJson       Json?
+  responseJson      Json?
+  errorMessage      String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  payment           Payment              @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId, createdAt])
+  @@index([provider, providerReference])
+}
+
+model PaymentSplit {
+  id                String            @id @default(cuid())
+  paymentId         String
+  recipientType     RecipientType
+  recipientId       String
+  amount            Decimal           @db.Decimal(12, 2)
+  feeAmount         Decimal           @default(0) @db.Decimal(12, 2)
+  status            PaymentSplitStatus @default(PENDING)
+  providerReference String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  payment           Payment           @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+  @@index([recipientType, recipientId])
+  @@index([status, createdAt])
+}
+
+model ChatConversation {
+  id                  String             @id @default(cuid())
+  bookingId           String?
+  candidateProfileId  String?
+  instructorProfileId String?
+  schoolId            String?
+  lastMessageAt       DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  booking             Booking?           @relation(fields: [bookingId], references: [id])
+  candidateProfile    CandidateProfile?  @relation(fields: [candidateProfileId], references: [id])
+  instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  school              School?            @relation(fields: [schoolId], references: [id])
+  messages            ChatMessage[]
+
+  @@index([bookingId])
+  @@index([candidateProfileId, instructorProfileId])
+}
+
+model ChatMessage {
+  id             String          @id @default(cuid())
+  conversationId String
+  senderUserId   String
+  type           ChatMessageType @default(TEXT)
+  content        String
+  metadataJson   Json?
+  readAt         DateTime?
+  createdAt      DateTime        @default(now())
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id])
+  senderUser     User             @relation("ChatMessageSender", fields: [senderUserId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@index([senderUserId, createdAt])
+}
+
+model LessonLocationEvent {
+  id         String                @id @default(cuid())
+  lessonId   String
+  eventType  LessonLocationEventType
+  lat        Float
+  lng        Float
+  accuracy   Float?
+  address    String?
+  recordedAt DateTime              @default(now())
+  createdAt  DateTime              @default(now())
+  lesson     Lesson                @relation(fields: [lessonId], references: [id])
+
+  @@index([lessonId, recordedAt])
+}
+
+model ReminderJobLog {
+  id          String          @id @default(cuid())
+  userId      String?
+  bookingId   String?
+  lessonId    String?
+  type        ReminderType
+  channel     ReminderChannel
+  status      String
+  payloadJson Json?
+  processedAt DateTime?
+  createdAt   DateTime        @default(now())
+  user        User?           @relation(fields: [userId], references: [id])
+  booking     Booking?        @relation(fields: [bookingId], references: [id])
+  lesson      Lesson?         @relation(fields: [lessonId], references: [id])
+
+  @@index([type, channel, createdAt])
+  @@index([bookingId, lessonId])
+}
+
+model FraudSignal {
+  id          String          @id @default(cuid())
+  userId      String?
+  paymentId   String?
+  bookingId   String?
+  lessonId    String?
+  signalType  FraudSignalType
+  severity    FraudSeverity
+  score       Int
+  description String?
+  metadataJson Json?
+  createdAt   DateTime        @default(now())
+  user        User?           @relation(fields: [userId], references: [id])
+  payment     Payment?        @relation(fields: [paymentId], references: [id])
+  booking     Booking?        @relation(fields: [bookingId], references: [id])
+  lesson      Lesson?         @relation(fields: [lessonId], references: [id])
+
+  @@index([signalType, severity, createdAt])
+  @@index([paymentId, bookingId, lessonId])
+}
+
+model WebhookEvent {
+  id                String          @id @default(cuid())
+  provider          WebhookProvider
+  eventType         String
+  providerReference String?
+  payloadJson       Json
+  processed         Boolean         @default(false)
+  processedAt       DateTime?
+  errorMessage      String?
+  createdAt         DateTime        @default(now())
+
+  @@index([provider, createdAt])
+  @@index([provider, providerReference])
+  @@index([processed, createdAt])
 }

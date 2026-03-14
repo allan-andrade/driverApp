@@ -6,6 +6,7 @@ import {
   IncidentSeverity,
   IncidentType,
   InstructorType,
+  NotificationType,
   PaymentMethod,
   PaymentStatus,
   PayoutStatus,
@@ -13,12 +14,40 @@ import {
   UserRole,
   UserStatus,
   VerificationStatus,
+  WalletOwnerType,
+  WalletTransactionType,
+  DocumentReviewDecision,
+  PaymentAttemptStatus,
+  PaymentSplitStatus,
+  RecipientType,
+  ChatMessageType,
+  LessonLocationEventType,
+  ReminderChannel,
+  ReminderType,
+  FraudSeverity,
+  FraudSignalType,
+  WebhookProvider,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.chatMessage.deleteMany();
+  await prisma.chatConversation.deleteMany();
+  await prisma.reminderJobLog.deleteMany();
+  await prisma.lessonLocationEvent.deleteMany();
+  await prisma.fraudSignal.deleteMany();
+  await prisma.webhookEvent.deleteMany();
+  await prisma.paymentSplit.deleteMany();
+  await prisma.paymentAttempt.deleteMany();
+  await prisma.matchingSnapshot.deleteMany();
+  await prisma.documentReview.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.notificationPreference.deleteMany();
+  await prisma.walletTransaction.deleteMany();
+  await prisma.wallet.deleteMany();
+  await prisma.instructorMetrics.deleteMany();
   await prisma.dispute.deleteMany();
   await prisma.incidentReport.deleteMany();
   await prisma.payout.deleteMany();
@@ -284,6 +313,33 @@ async function main() {
     },
   });
 
+  await prisma.review.createMany({
+    data: [
+      {
+        bookingId: completedBooking.id,
+        candidateProfileId: candidateProfile.id,
+        instructorProfileId: instructorProfile.id,
+        punctuality: 4,
+        didactics: 5,
+        professionalism: 5,
+        safety: 5,
+        examReadiness: 5,
+        comment: 'Instrutor bem didatico e pontual.',
+      },
+      {
+        bookingId: completedBooking.id,
+        candidateProfileId: candidateProfile.id,
+        instructorProfileId: instructorProfile.id,
+        punctuality: 5,
+        didactics: 4,
+        professionalism: 5,
+        safety: 5,
+        examReadiness: 4,
+        comment: 'Boa preparacao para prova, com simulacoes uteis.',
+      },
+    ],
+  });
+
   const managerUser = await prisma.user.create({
     data: {
       email: 'manager@driverschool.local',
@@ -383,7 +439,262 @@ async function main() {
     },
   });
 
-  console.log('Seed phase 3 executed with success');
+  const metrics = await prisma.instructorMetrics.create({
+    data: {
+      instructorProfileId: instructorProfile.id,
+      averageRating: 4.7,
+      punctualityAvg: 4.67,
+      didacticsAvg: 4.67,
+      professionalismAvg: 5,
+      safetyAvg: 5,
+      examReadinessAvg: 4.33,
+      totalReviews: 3,
+      completedLessons: 1,
+      cancelledBookings: 0,
+      noShowCount: 0,
+      attendanceRate: 100,
+      completionRate: 100,
+      trustScore: 91.5,
+      teachingScore: 88.2,
+      marketplaceScore: 90.4,
+    },
+  });
+
+  const instructorWallet = await prisma.wallet.create({
+    data: {
+      ownerType: WalletOwnerType.INSTRUCTOR,
+      instructorProfileId: instructorProfile.id,
+      currency: 'BRL',
+      balanceAvailable: 343.2,
+      balancePending: 519.2,
+      balanceOnHold: 0,
+    },
+  });
+
+  await prisma.walletTransaction.createMany({
+    data: [
+      {
+        walletId: instructorWallet.id,
+        type: WalletTransactionType.CREDIT,
+        amount: 343.2,
+        referenceType: 'PAYMENT',
+        referenceId: completedPayment.id,
+        description: 'Credito de pagamento capturado',
+      },
+      {
+        walletId: instructorWallet.id,
+        type: WalletTransactionType.RELEASE,
+        amount: 343.2,
+        referenceType: 'PAYMENT',
+        referenceId: completedPayment.id,
+        description: 'Liberacao para saldo disponivel',
+      },
+    ],
+  });
+
+  await prisma.paymentAttempt.createMany({
+    data: [
+      {
+        paymentId: completedPayment.id,
+        provider: WebhookProvider.STRIPE,
+        providerReference: `seed_pi_${completedPayment.id}`,
+        status: PaymentAttemptStatus.SUCCESS,
+        requestJson: { amount: 390, currency: 'BRL' },
+        responseJson: { status: 'succeeded' },
+      },
+    ],
+  });
+
+  await prisma.paymentSplit.createMany({
+    data: [
+      {
+        paymentId: completedPayment.id,
+        recipientType: RecipientType.PLATFORM,
+        recipientId: 'platform',
+        amount: 46.8,
+        status: PaymentSplitStatus.PAID,
+      },
+      {
+        paymentId: completedPayment.id,
+        recipientType: RecipientType.INSTRUCTOR,
+        recipientId: instructorProfile.id,
+        amount: 343.2,
+        status: PaymentSplitStatus.PAID,
+      },
+    ],
+  });
+
+  const chatConversation = await prisma.chatConversation.create({
+    data: {
+      bookingId: upcomingBooking.id,
+      candidateProfileId: candidateProfile.id,
+      instructorProfileId: instructorProfile.id,
+      lastMessageAt: new Date(),
+    },
+  });
+
+  await prisma.chatMessage.createMany({
+    data: [
+      {
+        conversationId: chatConversation.id,
+        senderUserId: candidateUser.id,
+        type: ChatMessageType.TEXT,
+        content: 'Ola professor, podemos confirmar o local de encontro?',
+      },
+      {
+        conversationId: chatConversation.id,
+        senderUserId: instructorUser.id,
+        type: ChatMessageType.TEXT,
+        content: 'Claro, encontro em frente ao shopping as 13:45.',
+      },
+    ],
+  });
+
+  await prisma.lessonLocationEvent.createMany({
+    data: [
+      {
+        lessonId: completedLesson.id,
+        eventType: LessonLocationEventType.START,
+        lat: -23.561414,
+        lng: -46.655881,
+        address: 'Ponto de partida seed',
+      },
+      {
+        lessonId: completedLesson.id,
+        eventType: LessonLocationEventType.FINISH,
+        lat: -23.56818,
+        lng: -46.644312,
+        address: 'Ponto final seed',
+      },
+    ],
+  });
+
+  await prisma.reminderJobLog.createMany({
+    data: [
+      {
+        userId: candidateUser.id,
+        bookingId: upcomingBooking.id,
+        lessonId: upcomingLesson.id,
+        type: ReminderType.LESSON_REMINDER,
+        channel: ReminderChannel.IN_APP,
+        status: 'SENT',
+        processedAt: new Date(),
+      },
+      {
+        userId: instructorUser.id,
+        bookingId: upcomingBooking.id,
+        lessonId: upcomingLesson.id,
+        type: ReminderType.LESSON_REMINDER,
+        channel: ReminderChannel.IN_APP,
+        status: 'SENT',
+        processedAt: new Date(),
+      },
+    ],
+  });
+
+  await prisma.fraudSignal.create({
+    data: {
+      userId: candidateUser.id,
+      paymentId: completedPayment.id,
+      bookingId: completedBooking.id,
+      signalType: FraudSignalType.OTHER,
+      severity: FraudSeverity.LOW,
+      score: 15,
+      description: 'Seed baseline signal for risk dashboard.',
+      metadataJson: { source: 'seed' },
+    },
+  });
+
+  await prisma.webhookEvent.create({
+    data: {
+      provider: WebhookProvider.STRIPE,
+      eventType: 'payment_intent.succeeded',
+      providerReference: `seed_evt_${completedPayment.id}`,
+      payloadJson: { id: `seed_evt_${completedPayment.id}`, type: 'payment_intent.succeeded' },
+      processed: true,
+      processedAt: new Date(),
+    },
+  });
+
+  await prisma.notificationPreference.createMany({
+    data: [
+      { userId: candidateUser.id, inAppEnabled: true, bookingUpdates: true, lessonUpdates: true, paymentUpdates: true, safetyAlerts: true },
+      { userId: instructorUser.id, inAppEnabled: true, bookingUpdates: true, lessonUpdates: true, paymentUpdates: true, safetyAlerts: true },
+      { userId: managerUser.id, inAppEnabled: true, bookingUpdates: true, lessonUpdates: true, paymentUpdates: true, safetyAlerts: true },
+    ],
+  });
+
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: candidateUser.id,
+        type: NotificationType.BOOKING_CREATED,
+        title: 'Reserva criada',
+        message: 'Sua reserva foi criada com sucesso.',
+        payloadJson: { bookingId: upcomingBooking.id },
+      },
+      {
+        userId: instructorUser.id,
+        type: NotificationType.LESSON_COMPLETED,
+        title: 'Aula concluida',
+        message: 'Uma aula foi concluida e entrou no seu historico.',
+        payloadJson: { lessonId: completedLesson.id },
+      },
+      {
+        userId: managerUser.id,
+        type: NotificationType.DOCUMENT_REVIEWED,
+        title: 'Documento revisado',
+        message: 'Uma submissao documental recebeu revisao.',
+        payloadJson: { submissionId: submission.id },
+      },
+    ],
+  });
+
+  const docReview = await prisma.documentReview.create({
+    data: {
+      documentSubmissionId: submission.id,
+      reviewedByUserId: managerUser.id,
+      decision: DocumentReviewDecision.REQUEST_CHANGES,
+      reason: 'Necessario enviar arquivo em melhor qualidade.',
+      metadataJson: { source: 'seed' },
+    },
+  });
+
+  await prisma.matchingSnapshot.create({
+    data: {
+      candidateProfileId: candidateProfile.id,
+      instructorProfileId: instructorProfile.id,
+      score: 92.7,
+      factorsJson: {
+        trustScore: 91.5,
+        teachingScore: 88.2,
+        cityMatch: 1,
+        stateMatch: 1,
+        categoryMatch: 1,
+      },
+    },
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        actorUserId: instructorUser.id,
+        entityType: 'INSTRUCTOR_METRICS',
+        entityId: metrics.id,
+        action: 'SEED_METRICS_CREATED',
+        metadataJson: { source: 'seed' },
+      },
+      {
+        actorUserId: managerUser.id,
+        entityType: 'DOCUMENT_REVIEW',
+        entityId: docReview.id,
+        action: 'SEED_DOCUMENT_REVIEW_CREATED',
+        metadataJson: { source: 'seed' },
+      },
+    ],
+  });
+
+  console.log('Seed phase 5 executed with success');
 }
 
 main()

@@ -1,6 +1,6 @@
-# DriveSchool Platform - FASES 1, 2 e 3
+# DriveSchool Platform - FASES 1, 2, 3 e 4
 
-Fundacao funcional do produto com monorepo, auth completa, RBAC, banco, seed, marketplace e operacao real de aulas/financeiro/compliance.
+Fundacao funcional do produto com monorepo, auth completa, RBAC, banco, seed, marketplace operacional e camada inteligente de scores/ranking/notificacoes/wallet/analytics/compliance.
 
 ## Stack
 
@@ -64,7 +64,7 @@ npm run dev:web
 - API: http://localhost:4000/api
 - WEB: http://localhost:3000
 
-## Prisma (atualizado ate FASE 3)
+## Prisma (atualizado ate FASE 4)
 
 Schema principal: `apps/api/prisma/schema.prisma`
 
@@ -83,6 +83,13 @@ Entidades principais:
 - Dispute
 - IncidentReport
 - DocumentSubmission
+- InstructorMetrics
+- Wallet
+- WalletTransaction
+- Notification
+- NotificationPreference
+- DocumentReview
+- MatchingSnapshot
 
 Enums principais:
 
@@ -100,6 +107,17 @@ Enums principais:
 - IncidentSeverity
 - TransmissionType
 - CnhCategory
+- WalletOwnerType
+- WalletTransactionType
+- NotificationType
+- DocumentReviewDecision
+
+## Logica de score e ranking (FASE 4)
+
+- Trust Score: combina verificacao documental, pontualidade, attendance/completion rate, incidentes, disputas, cancelamentos e no-show.
+- Teaching Score: combina didatica, profissionalismo, preparo para prova, consistencia e volume de reviews/aulas.
+- Marketplace Score: combina trust + teaching + verificacao + disponibilidade + preco + social proof + volume operacional.
+- Matching: calcula score por aderencia de cidade/estado/categoria/transmissao/preco/scores e persiste snapshot para debug em MatchingSnapshot.
 
 ## Endpoints implementados (FASE 1 -> FASE 3)
 
@@ -130,9 +148,15 @@ Enums principais:
 
 - GET /marketplace/instructors
 - GET /marketplace/instructors/:id
+- GET /marketplace/instructors/:id/metrics
 - GET /marketplace/instructors/:id/availability
 - GET /marketplace/instructors/:id/reviews
 - GET /marketplace/instructors/:id/packages
+
+### Metrics / Ranking (FASE 4)
+
+- GET /admin/instructor-metrics (ADMIN)
+- POST /admin/instructors/:id/recalculate-metrics (ADMIN)
 
 ### Instructors me (FASE 2 - backend)
 
@@ -165,7 +189,31 @@ Enums principais:
 - GET /compliance/document-requirements (ADMIN)
 - POST /compliance/submissions (CANDIDATE/INSTRUCTOR/SCHOOL_MANAGER)
 - GET /compliance/submissions (CANDIDATE/INSTRUCTOR/SCHOOL_MANAGER/ADMIN)
+- GET /compliance/submissions/me (CANDIDATE/INSTRUCTOR/SCHOOL_MANAGER/ADMIN)
+- GET /compliance/requirements/:stateCode (CANDIDATE/INSTRUCTOR/SCHOOL_MANAGER/ADMIN)
 - PATCH /compliance/submissions/:id/review (ADMIN)
+- GET /admin/compliance/submissions (ADMIN)
+- PATCH /admin/compliance/submissions/:id/review (ADMIN)
+
+### Notifications (FASE 4)
+
+- GET /notifications/me
+- POST /notifications/:id/read
+- POST /notifications/read-all
+- GET /notification-preferences/me
+- PATCH /notification-preferences/me
+
+### Wallets (FASE 4)
+
+- GET /wallets/me
+- GET /wallets/me/transactions
+
+### Analytics (FASE 4)
+
+- GET /analytics/candidate/me
+- GET /analytics/instructor/me
+- GET /analytics/school/me
+- GET /analytics/admin/overview
 
 ### Bookings (operacional)
 
@@ -213,7 +261,7 @@ Enums principais:
 - GET /admin/instructors
 - GET /admin/schools
 
-## Seed (fase 3)
+## Seed (fase 4)
 
 Arquivo: `apps/api/prisma/seed.ts`
 
@@ -239,8 +287,13 @@ Dados adicionais no seed:
 - dispute aberta de exemplo
 - incident report de no-show
 - document submission pendente
+- instructor metrics (trust/teaching/marketplace)
+- wallet + wallet transactions
+- notification preferences + notifications
+- document review de exemplo
+- matching snapshot para depuracao
 
-## Frontend entregue (FASE 1 -> FASE 3)
+## Frontend entregue (FASE 1 -> FASE 4)
 
 Publico:
 
@@ -270,6 +323,16 @@ Novas telas FASE 3:
 - /instructor/lessons: execucao operacional de aula (check-in, start, finish, no-show, cancel)
 - /admin/operations: triagem operacional admin (status de payment/payout/dispute/incident e review documental)
 
+Novas telas/componentes FASE 4:
+
+- Marketplace com filtros e ordenacao avancada (trust/teaching/preco/rating/relevancia)
+- Score cards e badges de trust/teaching
+- Dashboards de analytics por perfil via /analytics/*
+- Centro de notificacoes in-app + preferencias
+- Wallet base com tabela de transacoes
+- Compliance documental para instrutor/escola/admin
+- Componentes reutilizaveis: ScoreCard, InstructorMetricsPanel, TrustScoreBadge, TeachingScoreBadge, MarketplaceSortBar, NotificationBell, NotificationList, WalletSummaryCard, WalletTransactionTable, AnalyticsOverviewCards, ComplianceUploadForm, ComplianceSubmissionTable, AdminDocumentReviewModal, RankingFactorsPanel
+
 ## Fluxo operacional resumido (FASE 3)
 
 1. booking confirmado cria lesson SCHEDULED e payment PENDING
@@ -279,13 +342,30 @@ Novas telas FASE 3:
 5. captura de payment gera payout ON_HOLD
 6. admin pode atualizar payout/disputes/incidents/submissions
 
-## Backlog sugerido para FASE 4
+## Como testar FASE 4
 
-1. Integracao real com gateway de pagamento e webhooks
-2. SLA de disputa/incidente com automacoes e notificacoes
-3. Evidencias de compliance em storage seguro (S3/GCS) e antivirus scan
-4. Regras antifraude e score de risco operacional
-5. Dashboards analiticos com filtros e exportacao
+1. Scores e ranking:
+  - GET /marketplace/instructors e GET /marketplace/instructors/:id/metrics
+  - GET /admin/instructor-metrics
+2. Notificacoes:
+  - POST /bookings, PATCH /lessons/*, PATCH /payments/:id/status e consulte GET /notifications/me
+3. Wallet:
+  - finalize uma aula para capturar payment e consulte GET /wallets/me e GET /wallets/me/transactions
+4. Analytics:
+  - consulte GET /analytics/candidate/me, /analytics/instructor/me, /analytics/school/me, /analytics/admin/overview
+5. Compliance documental:
+  - POST /compliance/submissions
+  - GET /admin/compliance/submissions
+  - PATCH /admin/compliance/submissions/:id/review
+
+## Backlog sugerido para FASE 5
+
+1. Jobs assíncronos dedicados para recálculo de métricas e lembretes (BullMQ completo)
+2. Notificações multi-canal reais (email/push/sms) com templates e fallback
+3. Engine de matching com aprendizado contínuo e feedback de conversão
+4. Wallet com reconciliação e payout calendar real
+5. Compliance com upload em storage seguro + versionamento + antifraude documental
+6. Dashboards com corte temporal, cohorts e exportação
 
 ## Status de validacao
 

@@ -36,6 +36,12 @@ export class ComplianceController {
     return this.complianceService.listDocumentRequirements(stateCode);
   }
 
+  @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER, UserRole.ADMIN)
+  @Get('requirements/:stateCode')
+  listRequirementsByState(@Param('stateCode') stateCode: string) {
+    return this.complianceService.listDocumentRequirements(stateCode.toUpperCase());
+  }
+
   @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER)
   @Post('submissions')
   createDocumentSubmission(
@@ -51,6 +57,12 @@ export class ComplianceController {
     return this.complianceService.listDocumentSubmissions(user.userId, user.role);
   }
 
+  @Roles(UserRole.CANDIDATE, UserRole.INSTRUCTOR, UserRole.SCHOOL_MANAGER, UserRole.ADMIN)
+  @Get('submissions/me')
+  listMySubmissions(@CurrentUser() user: { userId: string; role: UserRole }) {
+    return this.complianceService.listDocumentSubmissions(user.userId, user.role);
+  }
+
   @Roles(UserRole.ADMIN)
   @Patch('submissions/:id/review')
   reviewDocumentSubmission(
@@ -60,4 +72,5 @@ export class ComplianceController {
   ) {
     return this.complianceService.reviewDocumentSubmission(id, dto, actorUserId);
   }
+
 }

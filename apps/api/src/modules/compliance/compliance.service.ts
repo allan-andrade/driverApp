@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { EntityType, Prisma, UserRole } from '@prisma/client';
+import { DocumentReviewDecision, EntityType, NotificationType, Prisma, UserRole, VerificationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { MetricsService } from '../metrics/metrics.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateDocumentSubmissionDto } from './dto/create-document-submission.dto';
 import { CreateDocumentRequirementDto } from './dto/create-document-requirement.dto';
 import { ReviewDocumentSubmissionDto } from './dto/review-document-submission.dto';
@@ -12,6 +14,8 @@ export class ComplianceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   upsertStatePolicy(dto: UpsertStatePolicyDto) {
@@ -109,6 +113,12 @@ export class ComplianceService {
         include: {
           user: { select: { id: true, email: true, role: true } },
           reviewedByUser: { select: { id: true, email: true } },
+          reviews: {
+            orderBy: { createdAt: 'desc' },
+            include: {
+              reviewedByUser: { select: { id: true, email: true } },
+            },
+          },
         },
         take: 300,
       });
@@ -128,6 +138,14 @@ export class ComplianceService {
         ].filter(Boolean) as Prisma.DocumentSubmissionWhereInput[],
       },
       orderBy: { createdAt: 'desc' },
+      include: {
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            reviewedByUser: { select: { id: true, email: true } },
+          },
+        },
+      },
       take: 200,
     });
   }
@@ -135,21 +153,49 @@ export class ComplianceService {
   async reviewDocumentSubmission(id: string, dto: ReviewDocumentSubmissionDto, actorUserId: string) {
     const current = await this.prisma.documentSubmission.findUnique({
       where: { id },
-      select: { metadataJson: true },
+      select: { metadataJson: true, userId: true, instructorProfileId: true },
     });
+
+    const mappedStatus =
+      dto.decision === DocumentReviewDecision.APPROVED
+        ? VerificationStatus.APPROVED
+        : dto.decision === DocumentReviewDecision.REJECTED
+          ? VerificationStatus.REJECTED
+          : VerificationStatus.PENDING;
 
     const submission = await this.prisma.documentSubmission.update({
       where: { id },
       data: {
-        verificationStatus: dto.verificationStatus,
+        verificationStatus: mappedStatus,
         reviewedByUserId: actorUserId,
         reviewedAt: new Date(),
         metadataJson: {
           ...(typeof current?.metadataJson === 'object' && current?.metadataJson ? (current.metadataJson as Prisma.InputJsonObject) : {}),
           review: {
-            notes: dto.notes,
+            decision: dto.decision,
+            reason: dto.reason,
           },
         } as Prisma.InputJsonValue,
+      },
+    });
+
+    const review = await this.prisma.documentReview.create({
+      data: {
+        documentSubmissionId: id,
+        reviewedByUserId: actorUserId,
+        decision: dto.decision,
+        reason: dto.reason,
+      },
+    });
+
+    await this.auditService.log({
+      actorUserId,
+      entityType: EntityType.DOCUMENT_REVIEW,
+      entityId: review.id,
+      action: 'DOCUMENT_REVIEW_CREATED',
+      metadataJson: {
+        submissionId: id,
+        decision: dto.decision,
       },
     });
 
@@ -159,9 +205,25 @@ export class ComplianceService {
       entityId: id,
       action: 'DOCUMENT_SUBMISSION_REVIEWED',
       metadataJson: {
-        verificationStatus: dto.verificationStatus,
+        verificationStatus: mappedStatus,
+        decision: dto.decision,
       },
     });
+
+    if (current?.userId) {
+      await this.notificationsService.notifyUsers({
+        userIds: [current.userId],
+        type: NotificationType.DOCUMENT_REVIEWED,
+        title: 'Documento revisado',
+        message: `Sua submissao documental recebeu decisao: ${dto.decision}.`,
+        payloadJson: { submissionId: id, decision: dto.decision },
+        actorUserId,
+      });
+    }
+
+    if (current?.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(current.instructorProfileId, actorUserId, 'DOCUMENT_REVIEWED');
+    }
 
     return submission;
   }

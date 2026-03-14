@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { EntityType, IncidentStatus, UserRole } from '@prisma/client';
+import { EntityType, IncidentStatus, NotificationType, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { MetricsService } from '../metrics/metrics.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 
 @Injectable()
@@ -9,6 +11,8 @@ export class IncidentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   private async assertReporterCanOpen(
@@ -106,6 +110,18 @@ export class IncidentsService {
       },
     });
 
+    if (booking.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(booking.instructorProfileId, user.userId, 'INCIDENT_CREATED');
+    }
+
+    await this.notificationsService.notifyBookingParticipants(
+      bookingId,
+      NotificationType.INCIDENT_UPDATED,
+      'Incidente registrado',
+      'Um incidente foi registrado para a reserva.',
+      user.userId,
+    );
+
     return incident;
   }
 
@@ -148,6 +164,9 @@ export class IncidentsService {
     const incident = await this.prisma.incidentReport.update({
       where: { id },
       data: { status },
+      include: {
+        booking: { select: { id: true, instructorProfileId: true } },
+      },
     });
 
     await this.auditService.log({
@@ -159,6 +178,20 @@ export class IncidentsService {
         status,
       },
     });
+
+    if (incident.booking?.id) {
+      await this.notificationsService.notifyBookingParticipants(
+        incident.booking.id,
+        NotificationType.INCIDENT_UPDATED,
+        'Incidente atualizado',
+        `Status do incidente atualizado para ${status}.`,
+        actorUserId,
+      );
+    }
+
+    if (incident.booking?.instructorProfileId) {
+      await this.metricsService.recalculateForInstructor(incident.booking.instructorProfileId, actorUserId, 'INCIDENT_UPDATED');
+    }
 
     return incident;
   }

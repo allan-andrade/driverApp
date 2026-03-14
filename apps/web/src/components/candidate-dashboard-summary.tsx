@@ -2,13 +2,10 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { BookingListItem } from '@driver-school/types';
+import { CandidateAnalytics, NotificationItem } from '@driver-school/types';
+import { AnalyticsOverviewCards } from './analytics-overview-cards';
+import { NotificationBell } from './notification-bell';
 import { clientApiRequest } from '@/lib/client-api';
-
-type CandidateDashboardResponse = {
-  upcoming: Array<{ id: string; status: string; scheduledStart: string; priceTotal: number }>;
-  history: Array<{ id: string; status: string; scheduledStart: string }>;
-};
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString('pt-BR', {
@@ -22,13 +19,13 @@ function formatDate(value: string) {
 
 export function CandidateDashboardSummary() {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['candidate-dashboard'],
-    queryFn: () => clientApiRequest<CandidateDashboardResponse>('/dashboard/candidate'),
+    queryKey: ['candidate-analytics'],
+    queryFn: () => clientApiRequest<CandidateAnalytics>('/analytics/candidate/me'),
   });
 
-  const { data: bookings = [] } = useQuery({
-    queryKey: ['candidate-dashboard-bookings-count'],
-    queryFn: () => clientApiRequest<BookingListItem[]>('/bookings/me'),
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['candidate-notifications'],
+    queryFn: () => clientApiRequest<NotificationItem[]>('/notifications/me'),
   });
 
   if (isLoading) {
@@ -39,29 +36,27 @@ export function CandidateDashboardSummary() {
     return <div className="panel text-sm text-red-600">Nao foi possivel carregar seu dashboard.</div>;
   }
 
-  const activeCount = bookings.filter((item) => ['PENDING', 'CONFIRMED', 'RESCHEDULED'].includes(item.status)).length;
+  const unreadCount = notifications.filter((item) => !item.readAt).length;
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-3">
-        <article className="panel">
-          <p className="text-xs text-slate-500">Reservas ativas</p>
-          <p className="mt-2 text-2xl font-bold">{activeCount}</p>
-        </article>
-        <article className="panel">
-          <p className="text-xs text-slate-500">Proximas aulas</p>
-          <p className="mt-2 text-2xl font-bold">{data.upcoming.length}</p>
-        </article>
-        <article className="panel">
-          <p className="text-xs text-slate-500">Historico recente</p>
-          <p className="mt-2 text-2xl font-bold">{data.history.length}</p>
-        </article>
+      <div className="flex items-center justify-end">
+        <NotificationBell unreadCount={unreadCount} />
       </div>
 
+      <AnalyticsOverviewCards
+        items={[
+          { title: 'Proximas aulas', value: data.summary.upcomingLessons, tone: 'emerald' },
+          { title: 'Aulas concluidas', value: data.summary.completedLessons },
+          { title: 'Cancelamentos', value: data.summary.cancelledBookings, tone: 'amber' },
+          { title: 'Progresso', value: `${data.summary.progress.toFixed(1)}%` },
+        ]}
+      />
+
       <article className="panel">
-        <h2 className="text-lg font-semibold">Proximas aulas</h2>
+        <h2 className="text-lg font-semibold">Reservas recentes</h2>
         <div className="mt-3 space-y-2">
-          {data.upcoming.map((item) => (
+          {data.recentBookings.map((item) => (
             <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-sm">
               <div>
                 <p className="font-medium">{formatDate(item.scheduledStart)}</p>
@@ -72,7 +67,7 @@ export function CandidateDashboardSummary() {
               </Link>
             </div>
           ))}
-          {data.upcoming.length === 0 && <p className="text-sm text-slate-500">Sem aulas agendadas no momento.</p>}
+          {data.recentBookings.length === 0 && <p className="text-sm text-slate-500">Sem aulas agendadas no momento.</p>}
         </div>
       </article>
     </div>

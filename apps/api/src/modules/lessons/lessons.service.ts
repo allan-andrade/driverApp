@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { BookingStatus, EntityType, LessonStatus, PaymentStatus, UserRole } from '@prisma/client';
+import { BookingStatus, EntityType, LessonStatus, NotificationType, PaymentStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { MetricsService } from '../metrics/metrics.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PaymentsService } from '../payments/payments.service';
 import { FinishLessonDto } from './dto/finish-lesson.dto';
 import { StartLessonDto } from './dto/start-lesson.dto';
@@ -13,6 +15,8 @@ export class LessonsService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly paymentsService: PaymentsService,
+    private readonly notificationsService: NotificationsService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   listByInstructor(instructorProfileId: string) {
@@ -147,6 +151,16 @@ export class LessonsService {
       },
     });
 
+    await this.prisma.lessonLocationEvent.create({
+      data: {
+        lessonId,
+        eventType: 'CHECK_IN',
+        lat: 0,
+        lng: 0,
+        address: 'Check-in validated by PIN',
+      },
+    });
+
     await this.auditService.log({
       actorUserId: actor.userId,
       entityType: EntityType.LESSON,
@@ -154,6 +168,14 @@ export class LessonsService {
       action: 'LESSON_CHECK_IN_VERIFIED',
       metadataJson: {},
     });
+
+    await this.notificationsService.notifyBookingParticipants(
+      lesson.bookingId,
+      NotificationType.LESSON_STARTED,
+      'Aula iniciada',
+      'A aula foi iniciada no app com check-in validado.',
+      actor.userId,
+    );
 
     return updated;
   }
@@ -184,6 +206,18 @@ export class LessonsService {
       },
     });
 
+    if (typeof dto.startLat === 'number' && typeof dto.startLng === 'number') {
+      await this.prisma.lessonLocationEvent.create({
+        data: {
+          lessonId,
+          eventType: 'START',
+          lat: dto.startLat,
+          lng: dto.startLng,
+          address: dto.startAddress,
+        },
+      });
+    }
+
     await this.auditService.log({
       actorUserId: actor.userId,
       entityType: EntityType.LESSON,
@@ -194,6 +228,14 @@ export class LessonsService {
         startLng: dto.startLng,
       },
     });
+
+    await this.notificationsService.notifyBookingParticipants(
+      lesson.bookingId,
+      NotificationType.LESSON_STARTED,
+      'Aula iniciada',
+      'A aula foi iniciada e o acompanhamento foi ativado.',
+      actor.userId,
+    );
 
     return updated;
   }
@@ -221,6 +263,18 @@ export class LessonsService {
       },
     });
 
+    if (typeof dto.endLat === 'number' && typeof dto.endLng === 'number') {
+      await this.prisma.lessonLocationEvent.create({
+        data: {
+          lessonId,
+          eventType: 'FINISH',
+          lat: dto.endLat,
+          lng: dto.endLng,
+          address: dto.endAddress,
+        },
+      });
+    }
+
     await this.prisma.booking.update({
       where: { id: lesson.bookingId },
       data: { status: BookingStatus.COMPLETED },
@@ -247,6 +301,16 @@ export class LessonsService {
         bookingId: lesson.bookingId,
       },
     });
+
+    await this.notificationsService.notifyBookingParticipants(
+      lesson.bookingId,
+      NotificationType.LESSON_COMPLETED,
+      'Aula concluida',
+      'A aula foi concluida e o fluxo financeiro foi atualizado.',
+      actor.userId,
+    );
+
+    await this.metricsService.recalculateForInstructor(lesson.instructorProfileId, actor.userId, 'LESSON_COMPLETED');
 
     return updated;
   }
@@ -299,6 +363,16 @@ export class LessonsService {
       },
     });
 
+    await this.notificationsService.notifyBookingParticipants(
+      lesson.bookingId,
+      NotificationType.BOOKING_CANCELLED,
+      'Aula marcada como no-show',
+      'A aula foi encerrada como no-show e a reserva foi cancelada.',
+      actor.userId,
+    );
+
+    await this.metricsService.recalculateForInstructor(lesson.instructorProfileId, actor.userId, 'LESSON_NO_SHOW');
+
     return updated;
   }
 
@@ -349,6 +423,16 @@ export class LessonsService {
         reason,
       },
     });
+
+    await this.notificationsService.notifyBookingParticipants(
+      lesson.bookingId,
+      NotificationType.BOOKING_CANCELLED,
+      'Aula cancelada',
+      'A aula foi cancelada e os efeitos operacionais foram aplicados.',
+      actor.userId,
+    );
+
+    await this.metricsService.recalculateForInstructor(lesson.instructorProfileId, actor.userId, 'LESSON_CANCELLED');
 
     return updated;
   }
